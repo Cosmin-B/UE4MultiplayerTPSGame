@@ -6,6 +6,9 @@
 #include "GameFramework/Character.h"
 #include "CSCharacter.generated.h"
 
+class UCameraComponent;
+class USpringArmComponent;
+
 UCLASS()
 class UE4COOP_API ACSCharacter : public ACharacter
 {
@@ -23,6 +26,11 @@ protected:
 
     void MoveRight(float Value);
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UCameraComponent* CameraComp;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    USpringArmComponent* SpringArmComp;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
