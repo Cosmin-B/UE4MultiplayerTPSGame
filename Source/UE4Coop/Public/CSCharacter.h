@@ -26,6 +26,8 @@ protected:
 
     void MoveRight(float Value);
 
+    void MoveJump();
+
     void BeginCrouch();
 
     void EndCrouch();

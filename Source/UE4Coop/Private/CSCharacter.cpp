@@ -48,6 +48,8 @@ void ACSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
     PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ACSCharacter::BeginCrouch);
     PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ACSCharacter::EndCrouch);
+
+    PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACSCharacter::MoveJump);
 }
 
 void ACSCharacter::MoveForward(float Value)
@@ -58,6 +60,11 @@ void ACSCharacter::MoveForward(float Value)
 void ACSCharacter::MoveRight(float Value)
 {
     AddMovementInput(GetActorRightVector() * Value);
+}
+
+void ACSCharacter::MoveJump()
+{
+    Jump();
 }
 
 void ACSCharacter::BeginCrouch()
