@@ -7,6 +7,8 @@
 #include "CSWeapon.generated.h"
 
 class USkeletalMeshComponent;
+class UDamageType;
+class UParticleSystem;
 
 UCLASS()
 class UE4COOP_API ACSWeapon : public AActor
@@ -21,9 +23,26 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+    UFUNCTION(BlueprintCallable, Category = "Weapon")
+    void Fire();
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     USkeletalMeshComponent* MeshComp;
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+    TSubclassOf<UDamageType> DamageType;
+
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+    FName MuzzleSocketName;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+    UParticleSystem* MuzzleEffect;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+    UParticleSystem* ImpactEffect;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+    UParticleSystem* TracerEffect;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
