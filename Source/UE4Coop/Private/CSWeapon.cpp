@@ -60,7 +60,7 @@ void ACSWeapon::Fire()
 
     FHitResult Hit;
 
-    bool didHit = GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, ECollisionChannel::ECC_GameTraceChannel1, QueryParams);
+    bool didHit = GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams);
 
     if (didHit)
     {
