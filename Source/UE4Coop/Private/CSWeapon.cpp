@@ -8,6 +8,13 @@
 #include "Particles\ParticleSystem.h"
 #include "DrawDebugHelpers.h"
 
+static int32 DebugWeaponDrawing = 0;
+FAutoConsoleVariableRef CVARDebugWeaponDrawing (
+    TEXT("COOP.DebugWeapons"), 
+    DebugWeaponDrawing, 
+    TEXT("Draw Debug Lines for Weapons"), 
+    ECVF_Cheat);
+
 // Sets default values
 ACSWeapon::ACSWeapon()
 {
@@ -55,10 +62,11 @@ void ACSWeapon::Fire()
     QueryParams.AddIgnoredActor(this);
     QueryParams.bTraceComplex = true;
 
+    if (DebugWeaponDrawing)
+        DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
+
     if (MuzzleEffect)
         UGameplayStatics::SpawnEmitterAttached(MuzzleEffect, MeshComp, MuzzleSocketName);
-
-    //DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
 
     FHitResult Hit;
 
