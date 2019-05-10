@@ -2,6 +2,8 @@
 
 
 #include "../Public/CSWeapon.h"
+#include "../UE4Coop.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Kismet\GameplayStatics.h"
 #include "Components\SkeletalMeshComponent.h"
 #include "Particles\ParticleSystemComponent.h"
@@ -49,14 +51,16 @@ void ACSWeapon::Fire()
 
     QueryParams.AddIgnoredActor(MyOwner);
     QueryParams.AddIgnoredActor(this);
-    QueryParams.bTraceComplex = true;
+
+    QueryParams.bTraceComplex           = true;
+    QueryParams.bReturnPhysicalMaterial = true;
 
     if (DebugWeaponDrawing)
         DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
 
     FHitResult Hit;
 
-    bool didHit = GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, ECollisionChannel::ECC_Visibility, QueryParams);
+    bool didHit = GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, ECollisionChannel::ECC_GameTraceChannel1, QueryParams);
 
     if (didHit)
     {
@@ -64,8 +68,23 @@ void ACSWeapon::Fire()
 
         UGameplayStatics::ApplyPointDamage(HitActor, 20.0f, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
 
-        if (ImpactEffect)
-            UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+        EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+
+        UParticleSystem* SelectedEffect = nullptr;
+
+        switch (SurfaceType)
+        {
+            case SURFACE_FLESHDEFAULT:
+            case SURFACE_FLESHVULNERABLE:
+                SelectedEffect = FleshImpactEffect;
+                break;
+            default:
+                SelectedEffect = DefaultImpactEffect;
+                break;
+        }
+
+        if (SelectedEffect)
+            UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
     }
 
     PlayFireEffects(Hit, TraceEnd, didHit);
