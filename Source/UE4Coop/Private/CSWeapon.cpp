@@ -20,10 +20,13 @@ FAutoConsoleVariableRef CVARDebugWeaponDrawing (
 // Sets default values
 ACSWeapon::ACSWeapon()
 {
-    MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
-    RootComponent = MeshComp;
+    MeshComp            = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
+    RootComponent       = MeshComp;
 
-    MuzzleSocketName = "MuzzleSocket";
+    MuzzleSocketName    = "MuzzleSocket";
+
+    BaseDamage          = 20.0f;
+    VulnerableDamage    = BaseDamage * 2.5f;
 }
 
 // Called when the game starts or when spawned
@@ -66,10 +69,7 @@ void ACSWeapon::Fire()
     {
         AActor* HitActor = Hit.GetActor();
 
-        UGameplayStatics::ApplyPointDamage(HitActor, 20.0f, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
-
         EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
-
         UParticleSystem* SelectedEffect = nullptr;
 
         switch (SurfaceType)
@@ -85,6 +85,10 @@ void ACSWeapon::Fire()
 
         if (SelectedEffect)
             UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+
+        float FinalDamage = SurfaceType == SURFACE_FLESHVULNERABLE ? VulnerableDamage : BaseDamage;
+
+        UGameplayStatics::ApplyPointDamage(HitActor, FinalDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
     }
 
     PlayFireEffects(Hit, TraceEnd, didHit);
