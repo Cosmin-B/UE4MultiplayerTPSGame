@@ -67,6 +67,8 @@ void ACSWeapon::Fire()
         if (ImpactEffect)
             UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
     }
+
+    PlayFireEffects(Hit, TraceEnd, didHit);
 }
 
 void ACSWeapon::PlayFireEffects(FHitResult Hit, FVector TraceEnd, bool bDidHit)
@@ -82,5 +84,15 @@ void ACSWeapon::PlayFireEffects(FHitResult Hit, FVector TraceEnd, bool bDidHit)
 
         if (TracerComp)
             TracerComp->SetVectorParameter("BeamEnd", bDidHit ? Hit.ImpactPoint : TraceEnd);
+    }
+
+    APawn* MyOwner = Cast<APawn>(GetOwner());
+
+    if (MyOwner)
+    {
+        APlayerController* PlayerController = Cast<APlayerController>(MyOwner->GetController());
+
+        if (PlayerController)
+            PlayerController->ClientPlayCameraShake(FireCamShake);
     }
 }
