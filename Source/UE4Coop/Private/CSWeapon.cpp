@@ -9,6 +9,7 @@
 #include "Particles\ParticleSystemComponent.h"
 #include "Particles\ParticleSystem.h"
 #include "DrawDebugHelpers.h"
+#include "TimerManager.h"
 
 static int32 DebugWeaponDrawing = 0;
 FAutoConsoleVariableRef CVARDebugWeaponDrawing (
@@ -25,6 +26,7 @@ ACSWeapon::ACSWeapon()
 
     MuzzleSocketName    = "MuzzleSocket";
 
+    RateOfFire          = 900;
     BaseDamage          = 20.0f;
     VulnerableDamage    = BaseDamage * 2.5f;
 }
@@ -34,6 +36,7 @@ void ACSWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	
+    TimeBetweenShots = 60 / RateOfFire;
 }
 
 void ACSWeapon::Fire()
@@ -92,6 +95,20 @@ void ACSWeapon::Fire()
     }
 
     PlayFireEffects(Hit, TraceEnd, didHit);
+
+    LastFireTime = GetWorld()->TimeSeconds;
+}
+
+void ACSWeapon::StartFire()
+{
+    float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.0f);
+
+    GetWorldTimerManager().SetTimer(TimerHandle_TimeBetweenShots, this, &ACSWeapon::Fire, TimeBetweenShots, true, FirstDelay);
+}
+
+void ACSWeapon::StopFire()
+{
+    GetWorldTimerManager().ClearTimer(TimerHandle_TimeBetweenShots);
 }
 
 void ACSWeapon::PlayFireEffects(FHitResult Hit, FVector TraceEnd, bool bDidHit)

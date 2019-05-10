@@ -37,7 +37,9 @@ protected:
 
     void EndZoom();
 
-    void Fire();
+    void StartFire();
+
+    void StopFire();
 
     virtual FVector GetPawnViewLocation() const override;
 

@@ -23,6 +23,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+    virtual void Fire();
+
     virtual void PlayFireEffects(FHitResult Hit, FVector TraceEnd, bool bDidHit);
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -55,8 +57,18 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Weapon")
     float VulnerableDamage;
 
+    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+    float RateOfFire;
+
+    float TimeBetweenShots;
+
+    float LastFireTime;
+
+    FTimerHandle TimerHandle_TimeBetweenShots;
+
 public:
 
-    UFUNCTION(BlueprintCallable, Category = "Weapon")
-    virtual void Fire();
+    void StartFire();
+
+    void StopFire();
 };
