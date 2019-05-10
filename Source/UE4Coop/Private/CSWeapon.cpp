@@ -18,9 +18,6 @@ FAutoConsoleVariableRef CVARDebugWeaponDrawing (
 // Sets default values
 ACSWeapon::ACSWeapon()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
     MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
     RootComponent = MeshComp;
 
@@ -33,14 +30,6 @@ void ACSWeapon::BeginPlay()
 	Super::BeginPlay();
 	
 }
-
-// Called every frame
-void ACSWeapon::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
 
 void ACSWeapon::Fire()
 {
@@ -65,9 +54,6 @@ void ACSWeapon::Fire()
     if (DebugWeaponDrawing)
         DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
 
-    if (MuzzleEffect)
-        UGameplayStatics::SpawnEmitterAttached(MuzzleEffect, MeshComp, MuzzleSocketName);
-
     FHitResult Hit;
 
     bool didHit = GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, ECollisionChannel::ECC_Visibility, QueryParams);
@@ -81,6 +67,12 @@ void ACSWeapon::Fire()
         if (ImpactEffect)
             UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
     }
+}
+
+void ACSWeapon::PlayFireEffects(FHitResult Hit, FVector TraceEnd, bool bDidHit)
+{
+    if (MuzzleEffect)
+        UGameplayStatics::SpawnEmitterAttached(MuzzleEffect, MeshComp, MuzzleSocketName);
 
     if (TracerEffect)
     {
@@ -89,7 +81,6 @@ void ACSWeapon::Fire()
         UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TracerEffect, MuzzleLocation);
 
         if (TracerComp)
-            TracerComp->SetVectorParameter("BeamEnd", didHit ? Hit.ImpactPoint : TraceEnd);
+            TracerComp->SetVectorParameter("BeamEnd", bDidHit ? Hit.ImpactPoint : TraceEnd);
     }
-
 }

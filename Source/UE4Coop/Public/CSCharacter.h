@@ -8,6 +8,7 @@
 
 class UCameraComponent;
 class USpringArmComponent;
+class ACSWeapon;
 
 UCLASS()
 class UE4COOP_API ACSCharacter : public ACharacter
@@ -36,6 +37,8 @@ protected:
 
     void EndZoom();
 
+    void Fire();
+
     virtual FVector GetPawnViewLocation() const override;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -53,6 +56,14 @@ protected:
     float ZoomInterpSpeed;
 
     float DefaultFOV;
+
+    UPROPERTY(VisibleDefaultsOnly, Category = "Player")
+    FName WeaponAttachSocketName;
+
+    ACSWeapon* CurrentWeapon;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Player")
+    TSubclassOf<ACSWeapon> StarterWeaponClass;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
