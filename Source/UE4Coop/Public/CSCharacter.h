@@ -32,6 +32,10 @@ protected:
 
     void EndCrouch();
 
+    void BeginZoom();
+
+    void EndZoom();
+
     virtual FVector GetPawnViewLocation() const override;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -39,6 +43,16 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     USpringArmComponent* SpringArmComp;
+
+    bool bWantsToZoom;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Player")
+    float ZoomedFOV;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Player", meta = (ClampMin = 0.1, ClampMax = 100.0f))
+    float ZoomInterpSpeed;
+
+    float DefaultFOV;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

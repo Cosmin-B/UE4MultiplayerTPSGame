@@ -19,13 +19,17 @@ ACSCharacter::ACSCharacter()
 
     CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
     CameraComp->SetupAttachment(SpringArmComp);
+
+    ZoomedFOV = 65.5f;
+    ZoomInterpSpeed = 20.0f;
 }
 
 // Called when the game starts or when spawned
 void ACSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+    DefaultFOV = CameraComp->FieldOfView;
 }
 
 // Called every frame
@@ -33,6 +37,10 @@ void ACSCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+    float TargetFOV = bWantsToZoom ? ZoomedFOV : DefaultFOV;
+    float NewFOV    = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime, ZoomInterpSpeed);
+
+    CameraComp->SetFieldOfView(NewFOV);
 }
 
 // Called to bind functionality to input
@@ -50,6 +58,9 @@ void ACSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
     PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ACSCharacter::EndCrouch);
 
     PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACSCharacter::MoveJump);
+
+    PlayerInputComponent->BindAction("Zoom", IE_Pressed, this, &ACSCharacter::BeginZoom);
+    PlayerInputComponent->BindAction("Zoom", IE_Released, this, &ACSCharacter::EndZoom);
 }
 
 void ACSCharacter::MoveForward(float Value)
@@ -75,6 +86,16 @@ void ACSCharacter::BeginCrouch()
 void ACSCharacter::EndCrouch()
 {
     UnCrouch();
+}
+
+void ACSCharacter::BeginZoom()
+{
+    bWantsToZoom = true;
+}
+
+void ACSCharacter::EndZoom()
+{
+    bWantsToZoom = false;
 }
 
 FVector ACSCharacter::GetPawnViewLocation() const
