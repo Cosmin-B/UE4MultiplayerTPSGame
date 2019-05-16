@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "../UE4Coop.h"
 #include "../Public/CSCharacter.h"
 #include "../Public/CSWeapon.h"
+#include "../UE4Coop.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
