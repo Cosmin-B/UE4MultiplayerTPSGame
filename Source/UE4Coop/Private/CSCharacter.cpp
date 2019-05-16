@@ -1,8 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "../UE4Coop.h"
 #include "../Public/CSCharacter.h"
 #include "../Public/CSWeapon.h"
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 
@@ -17,6 +19,8 @@ ACSCharacter::ACSCharacter()
     SpringArmComp->SetupAttachment(RootComponent);
 
     GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
+
+    GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
 
     CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
     CameraComp->SetupAttachment(SpringArmComp);
