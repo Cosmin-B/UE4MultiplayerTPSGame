@@ -8,6 +8,7 @@
 
 class UCameraComponent;
 class USpringArmComponent;
+class UCSHealthComponent;
 class ACSWeapon;
 
 UCLASS()
@@ -43,11 +44,19 @@ protected:
 
     virtual FVector GetPawnViewLocation() const override;
 
+    UFUNCTION()
+    void OnHealthChanged(UCSHealthComponent* HealthComp, float Health, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+    protected:
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UCameraComponent* CameraComp;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     USpringArmComponent* SpringArmComp;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UCSHealthComponent* HealthComp;
 
     bool bWantsToZoom;
 
@@ -66,6 +75,9 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, Category = "Player")
     TSubclassOf<ACSWeapon> StarterWeaponClass;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Player")
+    bool bDied;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

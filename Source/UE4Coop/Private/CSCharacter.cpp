@@ -2,6 +2,7 @@
 
 #include "../Public/CSCharacter.h"
 #include "../Public/CSWeapon.h"
+#include "../Public/Components/CSHealthComponent.h"
 #include "../UE4Coop.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -24,6 +25,8 @@ ACSCharacter::ACSCharacter()
 
     CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
     CameraComp->SetupAttachment(SpringArmComp);
+
+    HealthComp = CreateDefaultSubobject<UCSHealthComponent>(TEXT("HealthComp"));
 
     ZoomedFOV = 65.5f;
     ZoomInterpSpeed = 20.0f;
@@ -49,6 +52,8 @@ void ACSCharacter::BeginPlay()
         CurrentWeapon->SetOwner(this);
         CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
     }
+
+    HealthComp->OnHealthChanged.AddDynamic(this, &ACSCharacter::OnHealthChanged);
 }
 
 // Called every frame
@@ -138,4 +143,19 @@ FVector ACSCharacter::GetPawnViewLocation() const
         return CameraComp->GetComponentLocation();
 
     return Super::GetPawnViewLocation();
+}
+
+void ACSCharacter::OnHealthChanged(UCSHealthComponent* HealthComponent, float Health, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
+    if (Health <= 0.0f && !bDied)
+    {
+        bDied = true;
+
+        GetMovementComponent()->StopMovementImmediately();
+        GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+        DetachFromControllerPendingDestroy();
+
+        SetLifeSpan(10.0f);
+    }
 }
