@@ -8,6 +8,7 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ACSCharacter::ACSCharacter()
@@ -41,19 +42,22 @@ void ACSCharacter::BeginPlay()
 
     DefaultFOV = CameraComp->FieldOfView;
 
-    // Spawn a default weapon
-    FActorSpawnParameters SpawnParams;
-    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-    CurrentWeapon = GetWorld()->SpawnActor<ACSWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-
-    if (CurrentWeapon)
-    {
-        CurrentWeapon->SetOwner(this);
-        CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
-    }
-
     HealthComp->OnHealthChanged.AddDynamic(this, &ACSCharacter::OnHealthChanged);
+
+    if (Role == ROLE_Authority)
+    {
+        // Spawn a default weapon
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+        CurrentWeapon = GetWorld()->SpawnActor<ACSWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+        if (CurrentWeapon)
+        {
+            CurrentWeapon->SetOwner(this);
+            CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
+        }
+    }
 }
 
 // Called every frame
@@ -158,4 +162,11 @@ void ACSCharacter::OnHealthChanged(UCSHealthComponent* HealthComponent, float He
 
         SetLifeSpan(10.0f);
     }
+}
+
+void ACSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(ACSCharacter, CurrentWeapon);
 }

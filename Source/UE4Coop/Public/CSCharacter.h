@@ -71,6 +71,7 @@ protected:
     UPROPERTY(VisibleDefaultsOnly, Category = "Player")
     FName WeaponAttachSocketName;
 
+    UPROPERTY(Replicated)
     ACSWeapon* CurrentWeapon;
 
     UPROPERTY(EditDefaultsOnly, Category = "Player")

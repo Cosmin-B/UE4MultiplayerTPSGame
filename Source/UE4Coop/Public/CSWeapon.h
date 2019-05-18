@@ -10,6 +10,29 @@ class USkeletalMeshComponent;
 class UDamageType;
 class UParticleSystem;
 
+USTRUCT()
+struct FHitScanTrace
+{
+    GENERATED_BODY()
+
+public:
+
+    UPROPERTY()
+    FHitResult Hit;
+
+    UPROPERTY()
+    FVector_NetQuantize TraceEnd;
+
+    UPROPERTY()
+    bool bDidHit;
+
+    UPROPERTY()
+    TEnumAsByte<EPhysicalSurface> SurfaceType;
+
+    UPROPERTY()
+    uint8 ReplicationCount;
+};
+
 UCLASS()
 class UE4COOP_API ACSWeapon : public AActor
 {
@@ -25,7 +48,10 @@ protected:
 
     virtual void Fire();
 
-    virtual void PlayFireEffects(FHitResult Hit, FVector TraceEnd, bool bDidHit);
+    UFUNCTION(Server, Reliable, WithValidation)
+    void ServerFire();
+
+    virtual void PlayFireEffects(FHitResult Hit, FVector TraceEnd, bool bDidHit, EPhysicalSurface SurfaceType);
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     USkeletalMeshComponent* MeshComp;
@@ -66,6 +92,11 @@ protected:
 
     FTimerHandle TimerHandle_TimeBetweenShots;
 
+    UPROPERTY(ReplicatedUsing=OnRep_HitScanTrace)
+    FHitScanTrace HitScanTrace;
+
+    UFUNCTION()
+    void OnRep_HitScanTrace();
 public:
 
     void StartFire();
