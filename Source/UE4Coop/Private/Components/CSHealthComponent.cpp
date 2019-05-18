@@ -3,6 +3,7 @@
 
 #include "CSHealthComponent.h"
 #include "GameFramework/Actor.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values for this component's properties
 UCSHealthComponent::UCSHealthComponent()
@@ -12,6 +13,8 @@ UCSHealthComponent::UCSHealthComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 
     MaxHealth = 100;
+
+    SetIsReplicated(true);
 }
 
 // Called when the game starts
@@ -19,9 +22,12 @@ void UCSHealthComponent::BeginPlay()
 {
     Super::BeginPlay();
 
-    AActor* MyOwner = GetOwner();
-    if (MyOwner)
-        MyOwner->OnTakeAnyDamage.AddDynamic(this, &UCSHealthComponent::OnDamageTaken);
+    if (GetOwnerRole() == ROLE_Authority)
+    {
+        AActor* MyOwner = GetOwner();
+        if (MyOwner)
+            MyOwner->OnTakeAnyDamage.AddDynamic(this, &UCSHealthComponent::OnDamageTaken);
+    }
 
     Health = MaxHealth;
 }
@@ -36,4 +42,11 @@ void UCSHealthComponent::OnDamageTaken(AActor* DamagedActor, float Damage, const
     OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
 
     UE_LOG(LogTemp, Log, TEXT("Health Changed: %s"), *FString::SanitizeFloat(Health));
+}
+
+void UCSHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(UCSHealthComponent, Health);
 }
