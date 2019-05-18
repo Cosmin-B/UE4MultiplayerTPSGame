@@ -77,7 +77,7 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Player")
     TSubclassOf<ACSWeapon> StarterWeaponClass;
 
-    UPROPERTY(BlueprintReadOnly, Category = "Player")
+    UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player")
     bool bDied;
 public:	
 	// Called every frame
