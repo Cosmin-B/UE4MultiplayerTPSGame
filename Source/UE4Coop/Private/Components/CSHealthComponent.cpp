@@ -50,3 +50,10 @@ void UCSHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 
     DOREPLIFETIME(UCSHealthComponent, Health);
 }
+
+void UCSHealthComponent::OnRep_Health(float OldHealth)
+{
+    float damage = Health - OldHealth;
+
+    OnHealthChanged.Broadcast(this, Health, damage, nullptr, nullptr, nullptr);
+}
