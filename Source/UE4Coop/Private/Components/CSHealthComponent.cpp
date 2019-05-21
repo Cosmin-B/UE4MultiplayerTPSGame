@@ -44,6 +44,16 @@ void UCSHealthComponent::OnDamageTaken(AActor* DamagedActor, float Damage, const
     UE_LOG(LogTemp, Log, TEXT("Health Changed: %s"), *FString::SanitizeFloat(Health));
 }
 
+void UCSHealthComponent::ApplyHeal(float HealAmount)
+{
+    if (HealAmount <= 0.0f || Health <= 0.0f)
+        return;
+
+    Health = FMath::Clamp(Health + HealAmount, 0.0f, MaxHealth);
+
+    OnHealthChanged.Broadcast(this, Health, -HealAmount, nullptr, nullptr, nullptr);
+}
+
 void UCSHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
