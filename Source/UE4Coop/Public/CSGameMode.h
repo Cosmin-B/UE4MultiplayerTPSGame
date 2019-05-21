@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "UE4CoopGameModeBase.generated.h"
+#include "CSGameMode.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class UE4COOP_API AUE4CoopGameModeBase : public AGameModeBase
+class UE4COOP_API ACSGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 	
