@@ -88,12 +88,31 @@ void ACSTrackerBot::Tick(float DeltaTime)
 
 FVector ACSTrackerBot::GetNextPathPoint()
 {
-    ACSCharacter* PlayerPawn = Cast<ACSCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
+    AActor* NearestPlayer = nullptr;
 
-    if (PlayerPawn == nullptr)
+    float NearestDistance = BIG_NUMBER;
+
+    // Find nearest player connected
+    TArray<AActor*> FoundPlayers;
+    UGameplayStatics::GetAllActorsOfClass(this, ACSCharacter::StaticClass(), FoundPlayers);
+
+    for (AActor* PlayerActor : FoundPlayers)
+    {
+        if(!IsValid(PlayerActor))
+            continue;
+
+        const float TempDistance = FVector::DistSquared(GetActorLocation(), PlayerActor->GetActorLocation());
+        if (NearestDistance > TempDistance)
+        {
+            NearestDistance = TempDistance;
+            NearestPlayer = PlayerActor;
+        }
+    }
+
+    if (NearestPlayer == nullptr)
         return FVector();
 
-    UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(this, GetActorLocation(), PlayerPawn);
+    UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(this, GetActorLocation(), NearestPlayer);
 
     if (NavPath && NavPath->PathPoints.Num() > 1)
         return NavPath->PathPoints[1];
@@ -126,6 +145,7 @@ void ACSTrackerBot::SelfDestruct()
 
     MeshComp->SetVisibility(false, true);
     MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    MeshComp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
     MeshComp->SetSimulatePhysics(false);
 
     if (Role < ENetRole::ROLE_Authority)
