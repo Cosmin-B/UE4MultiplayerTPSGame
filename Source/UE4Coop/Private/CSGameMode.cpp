@@ -3,6 +3,7 @@
 
 #include "CSGameMode.h"
 #include "CSGameState.h"
+#include "CSPlayerState.h"
 #include "Components/CSHealthComponent.h"
 #include "TimerManager.h"
 
@@ -12,6 +13,7 @@ ACSGameMode::ACSGameMode()
     TimeBetweenWaves = 5.0f;
 
     GameStateClass = ACSGameState::StaticClass();
+    PlayerStateClass = ACSPlayerState::StaticClass();
 }
 
 void ACSGameMode::StartPlay()

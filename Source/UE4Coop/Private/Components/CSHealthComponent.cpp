@@ -2,6 +2,7 @@
 
 
 #include "CSHealthComponent.h"
+#include "../Public/CSGameMode.h"
 #include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
 
@@ -12,6 +13,7 @@ UCSHealthComponent::UCSHealthComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
+    bIsDead = false;
     MaxHealth = 100;
 
     SetIsReplicated(true);
@@ -34,14 +36,18 @@ void UCSHealthComponent::BeginPlay()
 
 void UCSHealthComponent::OnDamageTaken(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
-    if (Damage <= 0.0f)
+    if (Damage <= 0.0f || bIsDead)
         return;
 
     Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth);
 
     OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
 
-    UE_LOG(LogTemp, Log, TEXT("Health Changed: %s"), *FString::SanitizeFloat(Health));
+    bIsDead = Health <= 0.0f;
+
+    if (bIsDead)
+        if (ACSGameMode* GM = Cast<ACSGameMode>(GetWorld()->GetAuthGameMode()))
+            GM->OnActorKilled.Broadcast(GetOwner(), DamageCauser, InstigatedBy);
 }
 
 void UCSHealthComponent::ApplyHeal(float HealAmount)
