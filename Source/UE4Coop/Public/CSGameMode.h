@@ -39,6 +39,8 @@ protected:
 
     void SetWaveState(EWaveState NewState);
 
+    void RespawnDeadPlayers();
+
 protected:
 
     int WaveCount;

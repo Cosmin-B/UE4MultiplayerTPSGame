@@ -59,6 +59,8 @@ void ACSGameMode::PrepareForNextWave()
     GetWorldTimerManager().SetTimer(TimerHandle_NextWaveStart, this, &ACSGameMode::StartWave, TimeBetweenWaves);
 
     SetWaveState(EWaveState::WaitingToStart);
+
+    RespawnDeadPlayers();
 }
 
 void ACSGameMode::CheckWaveState()
@@ -126,6 +128,22 @@ void ACSGameMode::SetWaveState(EWaveState NewState)
 
     if (ensureAlways(GS))
         GS->SetWaveState(NewState);
+}
+
+void ACSGameMode::RespawnDeadPlayers()
+{
+    for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+    {
+        APlayerController* PC = It->Get();
+
+        if (PC == nullptr)
+            continue;
+
+        APawn * PlayerPawn = PC->GetPawn();
+
+        if (PlayerPawn == nullptr)
+            RestartPlayer(PC);
+    }
 }
 
 void ACSGameMode::SpawnBotTimerElapse()
