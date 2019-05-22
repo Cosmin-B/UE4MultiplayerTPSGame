@@ -6,6 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "CSGameMode.generated.h"
 
+enum class EWaveState : uint8;
+
 /**
  * 
  */
@@ -25,9 +27,15 @@ protected:
 
     void EndWave();
 
+    void GameOver();
+
     void PrepareForNextWave();
 
     void CheckWaveState();
+
+    void CheckAnyPlayerAlive();
+
+    void SetWaveState(EWaveState NewState);
 
 protected:
 
@@ -41,6 +49,10 @@ protected:
     FTimerHandle TimerHandle_BotSpawner;
 
     FTimerHandle TimerHandle_NextWaveStart;
+
+    FTimerHandle TimerHandle_CheckWaveState;
+
+    FTimerHandle TimerHandle_CheckAnyPlayerAlive;
 
 public:
 
