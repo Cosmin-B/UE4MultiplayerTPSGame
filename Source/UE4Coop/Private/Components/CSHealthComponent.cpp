@@ -67,3 +67,8 @@ void UCSHealthComponent::OnRep_Health(float OldHealth)
 
     OnHealthChanged.Broadcast(this, Health, damage, nullptr, nullptr, nullptr);
 }
+
+float UCSHealthComponent::GetHealth() const
+{
+    return Health;
+}
