@@ -38,10 +38,6 @@ protected:
 
     void EndZoom();
 
-    void StartFire();
-
-    void StopFire();
-
     virtual FVector GetPawnViewLocation() const override;
 
     UFUNCTION()
@@ -85,5 +81,11 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+    UFUNCTION(BlueprintCallable, Category = "Player")
+    void StartFire();
+
+    UFUNCTION(BlueprintCallable, Category = "Player")
+    void StopFire();
 
 };
