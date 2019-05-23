@@ -29,6 +29,7 @@ ACSWeapon::ACSWeapon()
 
     RateOfFire          = 900;
     BaseDamage          = 20.0f;
+    ShootConeAngle      = 2.0f;
     VulnerableDamage    = BaseDamage * 2.5f;
 
     NetUpdateFrequency = 66.0f;
@@ -60,6 +61,11 @@ void ACSWeapon::Fire()
     MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
     FVector ShotDirection   = EyeRotation.Vector();
+
+    float halfConeAngle = FMath::DegreesToRadians(ShootConeAngle * 0.5f);
+
+    ShotDirection = FMath::VRandCone(ShotDirection, halfConeAngle, halfConeAngle);
+
     FVector TraceEnd        = EyeLocation + (ShotDirection * 10000);
 
     FCollisionQueryParams QueryParams;
