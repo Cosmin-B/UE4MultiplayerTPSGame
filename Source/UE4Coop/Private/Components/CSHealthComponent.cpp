@@ -16,6 +16,8 @@ UCSHealthComponent::UCSHealthComponent()
     bIsDead = false;
     MaxHealth = 100;
 
+    TeamNum = 255;
+
     SetIsReplicated(true);
 }
 
@@ -39,6 +41,9 @@ void UCSHealthComponent::OnDamageTaken(AActor* DamagedActor, float Damage, const
     if (Damage <= 0.0f || bIsDead)
         return;
 
+    if (DamageCauser != DamageCauser && IsFriendly(DamagedActor, DamageCauser))
+        return;
+
     Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth);
 
     OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
@@ -58,6 +63,20 @@ void UCSHealthComponent::ApplyHeal(float HealAmount)
     Health = FMath::Clamp(Health + HealAmount, 0.0f, MaxHealth);
 
     OnHealthChanged.Broadcast(this, Health, -HealAmount, nullptr, nullptr, nullptr);
+}
+
+bool UCSHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
+{
+    if (ActorA == nullptr || ActorB == nullptr)
+        return true;
+
+    UCSHealthComponent* HealthCompA = Cast<UCSHealthComponent>(ActorA->GetComponentByClass(UCSHealthComponent::StaticClass()));
+    UCSHealthComponent* HealthCompB = Cast<UCSHealthComponent>(ActorB->GetComponentByClass(UCSHealthComponent::StaticClass()));
+
+    if (HealthCompA == nullptr || HealthCompB == nullptr)
+        return true;
+
+    return HealthCompA->TeamNum == HealthCompB->TeamNum;
 }
 
 void UCSHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

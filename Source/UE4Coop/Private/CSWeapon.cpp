@@ -93,7 +93,7 @@ void ACSWeapon::Fire()
 
         float FinalDamage = SurfaceType == SURFACE_FLESHVULNERABLE ? VulnerableDamage : BaseDamage;
 
-        UGameplayStatics::ApplyPointDamage(HitActor, FinalDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
+        UGameplayStatics::ApplyPointDamage(HitActor, FinalDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), MyOwner, DamageType);
     }
 
     PlayFireEffects(Hit, TraceEnd, bDidHit, SurfaceType);

@@ -17,6 +17,9 @@ public:
 	// Sets default values for this component's properties
 	UCSHealthComponent();
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HealthComponent")
+    uint8 TeamNum;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -43,4 +46,7 @@ protected:
 
     UFUNCTION(BlueprintCallable, Category = "HealthComponent")
     void ApplyHeal(float HealAmount);
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HealthComponent")
+    static bool IsFriendly(AActor* ActorA, AActor* ActorB);
 };
