@@ -4,17 +4,31 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "AbilitySystemInterface.h"
 #include "CSCharacter.generated.h"
 
 class UCameraComponent;
 class USpringArmComponent;
 class UCSHealthComponent;
 class ACSWeapon;
+class UGameplayAbility;
+class UAbilitySystemComponent;
+
+UENUM(BlueprintType)
+enum class EAbilityInput : uint8
+{
+    UseAbility1 UMETA(DisplayName = "Use Spell 1"),
+    UseAbility2 UMETA(DisplayName = "Use Spell 2"),
+    UseAbility3 UMETA(DisplayName = "Use Spell 3"),
+    UseAbility4 UMETA(DisplayName = "Use Spell 4"),
+};
 
 UCLASS()
-class UE4COOP_API ACSCharacter : public ACharacter
+class UE4COOP_API ACSCharacter : public ACharacter, public IAbilitySystemInterface
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
+
+    UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 public:
 	// Sets default values for this character's properties
@@ -41,6 +55,8 @@ protected:
     UFUNCTION()
     void OnHealthChanged(UCSHealthComponent* OwningHealthComp, float Health, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
+    void PossessedBy(AController* NewController) override;
+
     virtual FVector GetPawnViewLocation() const override;
 protected:
 
@@ -52,6 +68,12 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UCSHealthComponent* HealthComp;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess="true"))
+    UAbilitySystemComponent* AbilitySystem;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+    TSubclassOf<UGameplayAbility> Ability;
 
     bool bWantsToZoom;
 

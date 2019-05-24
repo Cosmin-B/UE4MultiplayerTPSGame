@@ -4,6 +4,7 @@
 #include "../Public/CSWeapon.h"
 #include "../Public/Components/CSHealthComponent.h"
 #include "../UE4Coop.h"
+#include "AbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -28,6 +29,9 @@ ACSCharacter::ACSCharacter()
     CameraComp->SetupAttachment(SpringArmComp);
 
     HealthComp = CreateDefaultSubobject<UCSHealthComponent>(TEXT("HealthComp"));
+
+    // Our ability system component
+    AbilitySystem = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystem"));
 
     ZoomedFOV = 65.5f;
     ZoomInterpSpeed = 20.0f;
@@ -59,6 +63,12 @@ void ACSCharacter::BeginPlay()
             CurrentWeapon->SetOwner(this);
             CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
         }
+
+        if (AbilitySystem == nullptr || Ability == nullptr)
+            return;
+
+        AbilitySystem->GiveAbility(FGameplayAbilitySpec(Ability, 1, 0));
+        AbilitySystem->InitAbilityActorInfo(this, this);
     }
 }
 
@@ -94,6 +104,8 @@ void ACSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
     PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ACSCharacter::StartFire);
     PlayerInputComponent->BindAction("Fire", IE_Released, this, &ACSCharacter::StopFire);
+
+    AbilitySystem->BindAbilityActivationToInputComponent(PlayerInputComponent, FGameplayAbilityInputBinds("ConfirmInput", "CancelInput", "AbilityInput"));
 }
 
 void ACSCharacter::MoveForward(float Value)
@@ -151,6 +163,11 @@ FVector ACSCharacter::GetPawnViewLocation() const
     return Super::GetPawnViewLocation();
 }
 
+UAbilitySystemComponent* ACSCharacter::GetAbilitySystemComponent() const
+{
+    return AbilitySystem;
+}
+
 void ACSCharacter::OnHealthChanged(UCSHealthComponent* HealthComponent, float Health, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
     if (Health <= 0.0f && !bDied)
@@ -164,6 +181,14 @@ void ACSCharacter::OnHealthChanged(UCSHealthComponent* HealthComponent, float He
 
         SetLifeSpan(10.0f);
     }
+}
+
+void ACSCharacter::PossessedBy(AController* NewController)
+{
+    Super::PossessedBy(NewController);
+
+    if (AbilitySystem)
+        AbilitySystem->RefreshAbilityActorInfo();
 }
 
 void ACSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
