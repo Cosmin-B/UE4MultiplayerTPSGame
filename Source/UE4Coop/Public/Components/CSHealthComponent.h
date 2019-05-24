@@ -39,8 +39,14 @@ protected:
     void OnRep_Health(float OldHealth);
 
  public:
+
+    UFUNCTION(BlueprintCallable, Category = "HealthComponent")
     float GetHealth() const;
 
+    UFUNCTION(BlueprintCallable, Category = "HealthComponent")
+    float GetMaxHealth() const;
+
+    UFUNCTION(BlueprintCallable, Category = "HealthComponent")
     bool IsDead() const;
 
     UPROPERTY(BlueprintAssignable, Category = "Events")

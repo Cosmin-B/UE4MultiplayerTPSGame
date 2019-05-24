@@ -38,12 +38,11 @@ protected:
 
     void EndZoom();
 
-    virtual FVector GetPawnViewLocation() const override;
-
     UFUNCTION()
-    void OnHealthChanged(UCSHealthComponent* HealthComp, float Health, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+    void OnHealthChanged(UCSHealthComponent* OwningHealthComp, float Health, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
-    protected:
+    virtual FVector GetPawnViewLocation() const override;
+protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UCameraComponent* CameraComp;
@@ -73,7 +72,7 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Player")
     TSubclassOf<ACSWeapon> StarterWeaponClass;
 
-    UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player")
+    UPROPERTY(Replicated)
     bool bDied;
 public:	
 	// Called every frame
