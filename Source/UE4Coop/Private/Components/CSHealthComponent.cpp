@@ -97,3 +97,8 @@ float UCSHealthComponent::GetHealth() const
 {
     return Health;
 }
+
+bool UCSHealthComponent::IsDead() const
+{
+    return bIsDead;
+}

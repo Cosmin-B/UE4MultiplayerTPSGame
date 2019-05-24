@@ -41,6 +41,8 @@ protected:
  public:
     float GetHealth() const;
 
+    bool IsDead() const;
+
     UPROPERTY(BlueprintAssignable, Category = "Events")
     FOnHealthChangedSignature OnHealthChanged;
 
