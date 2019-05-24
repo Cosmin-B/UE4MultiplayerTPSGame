@@ -44,8 +44,8 @@ ACSTrackerBot::ACSTrackerBot()
     SelfDamage = 20.0f;
     SelfDamagePeriodic = 0.5f;
 
-    ExplosionDamage = 90.0f;
-    ExplosionRadius = 200.0f;
+    ExplosionDamage = 60.0f;
+    ExplosionRadius = 350.0f;
 }
 
 // Called when the game starts or when spawned
@@ -90,7 +90,7 @@ FVector ACSTrackerBot::GetNextPathPoint()
 {
     AActor* NearestPlayer = nullptr;
 
-    float NearestDistance = BIG_NUMBER;
+    float NearestDistance = FLT_MAX;
 
     // Find nearest player connected
     TArray<AActor*> FoundPlayers;
@@ -99,6 +99,13 @@ FVector ACSTrackerBot::GetNextPathPoint()
     for (AActor* PlayerActor : FoundPlayers)
     {
         if(!IsValid(PlayerActor))
+            continue;
+
+        UCSHealthComponent* HealthComponent = Cast<UCSHealthComponent>(PlayerActor->GetComponentByClass(UCSHealthComponent::StaticClass()));
+        if(HealthComponent == nullptr)
+            continue;
+
+        if(HealthComponent->IsDead())
             continue;
 
         const float TempDistance = FVector::DistSquared(GetActorLocation(), PlayerActor->GetActorLocation());
@@ -111,6 +118,9 @@ FVector ACSTrackerBot::GetNextPathPoint()
 
     if (NearestPlayer == nullptr)
         return FVector();
+
+    GetWorldTimerManager().ClearTimer(TimerHandle_RefreshPath);
+    GetWorldTimerManager().SetTimer(TimerHandle_RefreshPath, this, &ACSTrackerBot::RefreshPath, 3.0f, false);
 
     UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(this, GetActorLocation(), NearestPlayer);
 
@@ -167,6 +177,9 @@ void ACSTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 
     Super::NotifyActorBeginOverlap(OtherActor);
 
+    if (UCSHealthComponent::IsFriendly(this, OtherActor))
+        return;
+
     ACSCharacter* PlayerPawn = Cast<ACSCharacter>(OtherActor);
 
     if (PlayerPawn == nullptr)
@@ -186,4 +199,9 @@ void ACSTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 void ACSTrackerBot::ApplySelfDamage()
 {
     UGameplayStatics::ApplyDamage(this, SelfDamage, GetInstigatorController(), this, nullptr);
+}
+
+void ACSTrackerBot::RefreshPath()
+{
+    NextPathPoint = GetNextPathPoint();
 }

@@ -44,7 +44,7 @@ void UCSHealthComponent::OnDamageTaken(AActor* DamagedActor, float Damage, const
     if (DamageCauser != DamageCauser && IsFriendly(DamagedActor, DamageCauser))
         return;
 
-    Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth);
+    Health = FMath::Clamp(Health - Damage, -1.0f, MaxHealth);
 
     OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
 
@@ -60,7 +60,7 @@ void UCSHealthComponent::ApplyHeal(float HealAmount)
     if (HealAmount <= 0.0f || Health <= 0.0f)
         return;
 
-    Health = FMath::Clamp(Health + HealAmount, 0.0f, MaxHealth);
+    Health = FMath::Clamp(Health + HealAmount, -1.0f, MaxHealth);
 
     OnHealthChanged.Broadcast(this, Health, -HealAmount, nullptr, nullptr, nullptr);
 }
@@ -96,4 +96,14 @@ void UCSHealthComponent::OnRep_Health(float OldHealth)
 float UCSHealthComponent::GetHealth() const
 {
     return Health;
+}
+
+float UCSHealthComponent::GetMaxHealth() const
+{
+    return MaxHealth;
+}
+
+bool UCSHealthComponent::IsDead() const
+{
+    return Health <= 0;
 }

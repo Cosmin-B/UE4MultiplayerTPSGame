@@ -46,6 +46,8 @@ void ACSCharacter::BeginPlay()
 
     if (Role == ROLE_Authority)
     {
+        bDied = false;
+
         // Spawn a default weapon
         FActorSpawnParameters SpawnParams;
         SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;

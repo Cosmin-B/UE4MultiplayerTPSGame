@@ -34,8 +34,11 @@ protected:
 
     void ApplySelfDamage();
 
+    void RefreshPath();
+
     FVector GetNextPathPoint();
 
+protected:
     UPROPERTY(VisibleDefaultsOnly, Category = "Components")
     UStaticMeshComponent* MeshComp;
 
@@ -85,6 +88,8 @@ protected:
     bool bStartedSelfDestruction;
 
     FTimerHandle TimerHandle_SelfDamage;
+
+    FTimerHandle TimerHandle_RefreshPath;
 
 public:	
 	// Called every frame

@@ -115,7 +115,7 @@ void ACSGameMode::CheckAnyPlayerAlive()
         UCSHealthComponent* HealthComp = 
             Cast<UCSHealthComponent>(PlayerPawn->GetComponentByClass(UCSHealthComponent::StaticClass()));
 
-        if (ensure(HealthComp) && HealthComp->GetHealth() > 0.0f)
+        if (ensure(HealthComp) && !HealthComp->IsDead())
             return;
     }
 
