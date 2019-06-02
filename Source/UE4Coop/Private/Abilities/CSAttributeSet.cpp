@@ -2,14 +2,26 @@
 
 
 #include "CSAttributeSet.h"
+#include "Components/CSHealthComponent.h"
 #include "GameplayEffectExtension.h"
 #include "AbilitySystemComponent.h"
 #include "Net/UnrealNetwork.h"
 
+UCSAttributeSet::UCSAttributeSet()
+{
+    const float DefaultMaxHealth = 100.0f;
+
+    Health.SetBaseValue(DefaultMaxHealth);
+    Health.SetCurrentValue(DefaultMaxHealth);
+
+    MaxHealth.SetBaseValue(DefaultMaxHealth);
+    MaxHealth.SetCurrentValue(DefaultMaxHealth);
+}
+
 void UCSAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
 {
     if (HealthAttribute() == Attribute)
-        NewValue = FMath::Clamp(NewValue, 0.0f, MaxHealth);
+        NewValue = FMath::Clamp(NewValue, 0.0f, MaxHealth.GetCurrentValue());
 }
 
 void UCSAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData &Data)
@@ -38,12 +50,11 @@ void UCSAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffectModC
             AttackingController = Source->AbilityActorInfo->PlayerController.Get();
         }
 
-        Health = FMath::Clamp(Health, 0.0f, MaxHealth);
-
-        if (Health <= 0)
+        if (Health.GetCurrentValue() <= 0)
         {
-            if(DamagedActor)
-                UE_LOG(LogTemp, Warning, TEXT("%s Died!"), *DamagedActor->GetName());
+            if (DamagedActor)
+            {
+            }
         }
     }
 }

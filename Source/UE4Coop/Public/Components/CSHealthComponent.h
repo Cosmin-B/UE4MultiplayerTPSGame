@@ -33,9 +33,6 @@ protected:
     float MaxHealth;
 
     UFUNCTION()
-    void OnDamageTaken(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
-
-    UFUNCTION()
     void OnRep_Health(float OldHealth);
 
  public:
@@ -57,4 +54,7 @@ protected:
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HealthComponent")
     static bool IsFriendly(AActor* ActorA, AActor* ActorB);
+
+    UFUNCTION()
+    void OnDamageTaken(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 };

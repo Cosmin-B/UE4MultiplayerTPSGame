@@ -1,8 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "../Public/CSCharacter.h"
-#include "../Public/CSWeapon.h"
-#include "../Public/Components/CSHealthComponent.h"
+#include "CSCharacter.h"
+#include "CSWeapon.h"
+#include "Components/CSHealthComponent.h"
+#include "Abilities/CSAttributeSet.h"
 #include "../UE4Coop.h"
 #include "AbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
@@ -32,6 +33,7 @@ ACSCharacter::ACSCharacter()
 
     // Our ability system component
     AbilitySystem = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystem"));
+    AttributeSet = CreateDefaultSubobject<UCSAttributeSet>(TEXT("AttributeSet"));
 
     ZoomedFOV = 65.5f;
     ZoomInterpSpeed = 20.0f;
@@ -63,12 +65,6 @@ void ACSCharacter::BeginPlay()
             CurrentWeapon->SetOwner(this);
             CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
         }
-
-        if (AbilitySystem == nullptr || Ability == nullptr)
-            return;
-
-        AbilitySystem->GiveAbility(FGameplayAbilitySpec(Ability, 1, 0));
-        AbilitySystem->InitAbilityActorInfo(this, this);
     }
 }
 
@@ -105,7 +101,18 @@ void ACSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
     PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ACSCharacter::StartFire);
     PlayerInputComponent->BindAction("Fire", IE_Released, this, &ACSCharacter::StopFire);
 
-    AbilitySystem->BindAbilityActivationToInputComponent(PlayerInputComponent, FGameplayAbilityInputBinds("ConfirmInput", "CancelInput", "AbilityInput"));
+    AbilitySystem->BindAbilityActivationToInputComponent(PlayerInputComponent, FGameplayAbilityInputBinds("ConfirmInput", "CancelInput", "EAbilityInput"));
+}
+
+void ACSCharacter::AcquireAbility(TSubclassOf<UGameplayAbility> AbiltyToAcquire)
+{
+    if (AbilitySystem)
+    {
+        if (HasAuthority() && AbiltyToAcquire)
+            AbilitySystem->GiveAbility(FGameplayAbilitySpec(AbiltyToAcquire, 1, 0));
+
+        AbilitySystem->InitAbilityActorInfo(this, this);
+    }
 }
 
 void ACSCharacter::MoveForward(float Value)

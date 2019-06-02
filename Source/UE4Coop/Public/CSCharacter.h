@@ -12,6 +12,7 @@ class USpringArmComponent;
 class UCSHealthComponent;
 class ACSWeapon;
 class UGameplayAbility;
+class UCSAttributeSet;
 class UAbilitySystemComponent;
 
 UENUM(BlueprintType)
@@ -72,8 +73,8 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess="true"))
     UAbilitySystemComponent* AbilitySystem;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
-    TSubclassOf<UGameplayAbility> Ability;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess="true"))
+    UCSAttributeSet*	AttributeSet;
 
     bool bWantsToZoom;
 
@@ -102,6 +103,9 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+    UFUNCTION(BlueprintCallable, Category = "Player | Abilities")
+    void AcquireAbility(TSubclassOf<UGameplayAbility> AbiltyToAcquire);
 
     UFUNCTION(BlueprintCallable, Category = "Player")
     void StartFire();

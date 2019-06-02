@@ -16,11 +16,13 @@ class UE4COOP_API UCSAttributeSet : public UAttributeSet
 
 public:
 
-    UPROPERTY(Category = "Character Attributes | Health", EditAnywhere, BlueprintReadWrite)
-    float Health;
+    UCSAttributeSet();
 
-    UPROPERTY(Category = "Character Attributes | Max Health", EditAnywhere, BlueprintReadWrite)
-    float MaxHealth;
+    UPROPERTY(Category = "Character Attributes", EditAnywhere, BlueprintReadWrite)
+    FGameplayAttributeData Health;
+
+    UPROPERTY(Category = "Character Attributes", EditAnywhere, BlueprintReadWrite)
+    FGameplayAttributeData MaxHealth;
 
 public:
 
