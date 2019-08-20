@@ -2,7 +2,8 @@
 
 
 #include "CSHealthComponent.h"
-#include "../Public/CSGameMode.h"
+#include "CSGameMode.h"
+
 #include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
 

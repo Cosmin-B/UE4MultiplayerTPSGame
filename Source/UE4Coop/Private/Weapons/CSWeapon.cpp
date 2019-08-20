@@ -1,8 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "../Public/CSWeapon.h"
-#include "../UE4Coop.h"
+#include "CSWeapon.h"
+#include "CSTypes.h"
+
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Kismet\GameplayStatics.h"
 #include "Components\SkeletalMeshComponent.h"

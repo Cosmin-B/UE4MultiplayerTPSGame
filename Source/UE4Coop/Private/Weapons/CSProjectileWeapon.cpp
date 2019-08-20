@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "../Public/CSProjectileWeapon.h"
+#include "CSProjectileWeapon.h"
 
 void ACSProjectileWeapon::Fire()
 {

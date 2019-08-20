@@ -2,8 +2,10 @@
 
 
 #include "CSTrackerBot.h"
-#include "../Public/CSCharacter.h"
-#include "../Public/Components/CSHealthComponent.h"
+#include "CSCharacter.h"
+#include "CSHealthComponent.h"
+
+
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
 #include "NavigationSystem/Public/NavigationSystem.h"

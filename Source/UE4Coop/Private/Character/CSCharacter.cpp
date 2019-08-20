@@ -2,9 +2,10 @@
 
 #include "CSCharacter.h"
 #include "CSWeapon.h"
+#include "CSTypes.h"
 #include "Components/CSHealthComponent.h"
 #include "Abilities/CSAttributeSet.h"
-#include "../UE4Coop.h"
+
 #include "AbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
