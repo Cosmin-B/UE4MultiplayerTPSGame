@@ -14,6 +14,8 @@ ACSGameMode::ACSGameMode()
 
     GameStateClass = ACSGameState::StaticClass();
     PlayerStateClass = ACSPlayerState::StaticClass();
+
+    bAllowFriendlyFire = true;
 }
 
 void ACSGameMode::StartPlay()
@@ -154,4 +156,9 @@ void ACSGameMode::SpawnBotTimerElapse()
 
     if (NumberOfBotsToSpawn <= 0)
         EndWave();
+}
+
+bool ACSGameMode::IsFriendlyFireAllowed()
+{
+    return bAllowFriendlyFire;
 }

@@ -85,7 +85,7 @@ void ACSWeapon::Fire()
 
     EPhysicalSurface SurfaceType = EPhysicalSurface::SurfaceType_Default;
 
-    if (bDidHit)
+    if (bDidHit && MyOwner->HasAuthority())
     {
         AActor* HitActor = Hit.GetActor();
 

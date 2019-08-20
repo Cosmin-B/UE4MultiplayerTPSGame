@@ -41,7 +41,11 @@ void UCSHealthComponent::OnDamageTaken(AActor* DamagedActor, float Damage, const
     if (Damage <= 0.0f || bIsDead)
         return;
 
-    if (DamageCauser != DamageCauser && IsFriendly(DamagedActor, DamageCauser))
+    ACSGameMode* CSGameMode = Cast<ACSGameMode>(GetWorld()->GetAuthGameMode());
+    if (!CSGameMode)
+        return;
+
+    if (DamageCauser != DamageCauser && (IsFriendly(DamagedActor, DamageCauser) && !CSGameMode->IsFriendlyFireAllowed()))
         return;
 
     Health = FMath::Clamp(Health - Damage, -1.0f, MaxHealth);
@@ -51,8 +55,7 @@ void UCSHealthComponent::OnDamageTaken(AActor* DamagedActor, float Damage, const
     bIsDead = Health <= 0.0f;
 
     if (bIsDead)
-        if (ACSGameMode* GM = Cast<ACSGameMode>(GetWorld()->GetAuthGameMode()))
-            GM->OnActorKilled.Broadcast(GetOwner(), DamageCauser, InstigatedBy);
+        CSGameMode->OnActorKilled.Broadcast(GetOwner(), DamageCauser, InstigatedBy);
 }
 
 void UCSHealthComponent::ApplyHeal(float HealAmount)

@@ -58,11 +58,19 @@ protected:
 
     FTimerHandle TimerHandle_CheckAnyPlayerAlive;
 
+    /** Flag to indicate if this Game Mode allows friendly fire */
+    UPROPERTY(EditDefaultsOnly, Category = "GameMode")
+    bool bAllowFriendlyFire;
+
 public:
 
     ACSGameMode();
 
     virtual void StartPlay() override;
+
+    /** Whether or not this Game Mode allows friendly fire */
+    UFUNCTION(BlueprintCallable, Category = "GameMode")
+    bool IsFriendlyFireAllowed();
 
     UPROPERTY(BlueprintAssignable, Category = "GameMode")
     FOnActorKilled OnActorKilled;

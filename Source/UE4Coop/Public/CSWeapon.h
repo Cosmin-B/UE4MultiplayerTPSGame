@@ -43,6 +43,7 @@ public:
 	ACSWeapon();
 
 protected:
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -75,7 +76,7 @@ protected:
     UParticleSystem* TracerEffect;
 
     UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-    TSubclassOf<UCameraShake> FireCamShake;
+    TSubclassOf<class UCameraShake> FireCamShake;
 
     UPROPERTY(EditDefaultsOnly, Category = "Weapon")
     float BaseDamage;
@@ -101,6 +102,7 @@ protected:
 
     UFUNCTION()
     void OnRep_HitScanTrace();
+
 public:
 
     void StartFire();
