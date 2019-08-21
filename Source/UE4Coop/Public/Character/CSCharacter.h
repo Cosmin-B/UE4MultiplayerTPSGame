@@ -82,6 +82,29 @@ protected:
     UFUNCTION(BlueprintCallable, Category = "Player")
     void StopFire();
 
+public:
+
+    //////////////////////////////////////////////////////////////////////////
+    // Weapon usage
+
+    /** Check if pawn can fire weapon */
+    bool CanFire() const;
+
+    /** Check if pawn can reload weapon */
+    bool CanReload() const;
+
+    //////////////////////////////////////////////////////////////////////////
+    // Animations
+
+    /** Play anim montage */
+    virtual float PlayAnimMontage(class UAnimMontage* AnimMontage, float InPlayRate = 1.f, FName StartSectionName = NAME_None) override;
+
+    /** Stop playing montage */
+    virtual void StopAnimMontage(class UAnimMontage* AnimMontage) override;
+
+    /** Stop playing all montages */
+    void StopAllAnimMontages();
+
 protected:
 
     //////////////////////////////////////////////////////////////////////////

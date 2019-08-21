@@ -7,6 +7,7 @@
 #include "Abilities/CSAttributeSet.h"
 #include "CSPlayerState.h"
 
+#include "Animation/AnimMontage.h"
 #include "AbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -173,6 +174,51 @@ void ACSCharacter::StopFire()
 {
     if (CurrentWeapon)
         CurrentWeapon->StopFire();
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Weapon usage
+
+bool ACSCharacter::CanFire() const
+{
+    return !bDied;
+}
+
+bool ACSCharacter::CanReload() const
+{
+    return true;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Animations
+
+float ACSCharacter::PlayAnimMontage(UAnimMontage* AnimMontage, float InPlayRate /*= 1.f*/, FName StartSectionName /*= NAME_None*/)
+{
+    USkeletalMeshComponent* UseMesh = GetMesh();
+
+    if (AnimMontage && UseMesh && UseMesh->AnimScriptInstance)
+        return UseMesh->AnimScriptInstance->Montage_Play(AnimMontage, InPlayRate);
+
+    return 0.0f;
+}
+
+void ACSCharacter::StopAnimMontage(UAnimMontage* AnimMontage)
+{
+    USkeletalMeshComponent* UseMesh = GetMesh();
+
+    if (AnimMontage && UseMesh && UseMesh->AnimScriptInstance &&
+        UseMesh->AnimScriptInstance->Montage_IsPlaying(AnimMontage))
+    {
+        UseMesh->AnimScriptInstance->Montage_Stop(AnimMontage->BlendOut.GetBlendTime(), AnimMontage);
+    }
+}
+
+void ACSCharacter::StopAllAnimMontages()
+{
+    USkeletalMeshComponent* UseMesh = GetMesh();
+
+    if (UseMesh && UseMesh->AnimScriptInstance)
+        UseMesh->AnimScriptInstance->Montage_Stop(0.0f);
 }
 
 //////////////////////////////////////////////////////////////////////////
