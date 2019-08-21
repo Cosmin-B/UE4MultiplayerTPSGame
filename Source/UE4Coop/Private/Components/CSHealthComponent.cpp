@@ -3,6 +3,7 @@
 
 #include "CSHealthComponent.h"
 #include "CSGameMode.h"
+#include "CSCharacter.h"
 
 #include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
@@ -49,14 +50,26 @@ void UCSHealthComponent::OnDamageTaken(AActor* DamagedActor, float Damage, const
     if (DamageCauser != DamageCauser && (IsFriendly(DamagedActor, DamageCauser) && !CSGameMode->IsFriendlyFireAllowed()))
         return;
 
+    const float OldHealth = Health;
+
     Health = FMath::Clamp(Health - Damage, -1.0f, MaxHealth);
 
     OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
 
     bIsDead = Health <= 0.0f;
 
-    if (bIsDead)
-        CSGameMode->OnActorKilled.Broadcast(GetOwner(), DamageCauser, InstigatedBy);
+    ACSCharacter* CSDamageCauser = Cast<ACSCharacter>(DamageCauser);
+    if(CSDamageCauser)
+        CSDamageCauser->RegisterAction(ECharacterAction::DamageDone, OldHealth - Health);
+
+    ACSCharacter* CSOwner = Cast<ACSCharacter>(GetOwner());
+    if (CSOwner)
+    {
+        CSOwner->RegisterAction(ECharacterAction::DamageTaken, Damage);
+
+        if (bIsDead)
+            CSGameMode->Killed(InstigatedBy, CSOwner->Controller, CSOwner, DamageType);
+    }
 }
 
 void UCSHealthComponent::ApplyHeal(float HealAmount)
@@ -87,6 +100,7 @@ void UCSHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+    DOREPLIFETIME(UCSHealthComponent, bIsDead);
     DOREPLIFETIME(UCSHealthComponent, Health);
 }
 

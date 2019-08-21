@@ -5,10 +5,12 @@
 #include "CSTypes.h"
 #include "Components/CSHealthComponent.h"
 #include "Abilities/CSAttributeSet.h"
+#include "CSPlayerState.h"
 
 #include "AbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -42,6 +44,9 @@ ACSCharacter::ACSCharacter()
     WeaponAttachSocketName = "WeaponSocket";
 }
 
+//////////////////////////////////////////////////////////////////////////
+// ACharacter Interface
+
 // Called when the game starts or when spawned
 void ACSCharacter::BeginPlay()
 {
@@ -51,7 +56,7 @@ void ACSCharacter::BeginPlay()
 
     HealthComp->OnHealthChanged.AddDynamic(this, &ACSCharacter::OnHealthChanged);
 
-    if (Role == ROLE_Authority)
+    if (HasAuthority())
     {
         bDied = false;
 
@@ -62,11 +67,16 @@ void ACSCharacter::BeginPlay()
         CurrentWeapon = GetWorld()->SpawnActor<ACSWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
         if (CurrentWeapon)
-        {
-            CurrentWeapon->SetOwner(this);
-            CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
-        }
+            CurrentWeapon->OnEquip(this);
     }
+}
+
+void ACSCharacter::PossessedBy(AController* NewController)
+{
+    Super::PossessedBy(NewController);
+
+    if (AbilitySystem)
+        AbilitySystem->RefreshAbilityActorInfo();
 }
 
 // Called every frame
@@ -80,7 +90,9 @@ void ACSCharacter::Tick(float DeltaTime)
     CameraComp->SetFieldOfView(NewFOV);
 }
 
-// Called to bind functionality to input
+//////////////////////////////////////////////////////////////////////////
+// Input
+
 void ACSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -163,18 +175,44 @@ void ACSCharacter::StopFire()
         CurrentWeapon->StopFire();
 }
 
-FVector ACSCharacter::GetPawnViewLocation() const
-{
-    if (CameraComp)
-        return CameraComp->GetComponentLocation();
+//////////////////////////////////////////////////////////////////////////
+// Statistics
 
-    return Super::GetPawnViewLocation();
+void ACSCharacter::RegisterAction(ECharacterAction Action, float Amount /*= 0*/)
+{
+    if (!HasAuthority())
+        return;
+
+    APlayerController* PlayerController = Cast<APlayerController>(Controller);
+    if (PlayerController)
+    {
+        ACSPlayerState* CSPlayerState = Cast<ACSPlayerState>(PlayerController->PlayerState);
+        if (CSPlayerState)
+        {
+            switch (Action)
+            {
+                case ECharacterAction::ShotFire:
+                    CSPlayerState->RegisterShotFired();
+                    break;
+                case ECharacterAction::ShotHit:
+                    CSPlayerState->RegisterShotHit();
+                    break;
+                case ECharacterAction::DamageDone:
+                    CSPlayerState->RegisterDamageDone((int32)Amount);
+                    break;
+                case ECharacterAction::DamageTaken:
+                    CSPlayerState->RegisterDamageTaken((int32)Amount);
+                    break;
+                default:
+                    UE_LOG(LogTemp, Warning, TEXT("Wanted to register unhandled character action"));
+                    break;
+            }
+        }
+    }
 }
 
-UAbilitySystemComponent* ACSCharacter::GetAbilitySystemComponent() const
-{
-    return AbilitySystem;
-}
+//////////////////////////////////////////////////////////////////////////
+// Damage and health system
 
 void ACSCharacter::OnHealthChanged(UCSHealthComponent* HealthComponent, float Health, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
@@ -191,13 +229,29 @@ void ACSCharacter::OnHealthChanged(UCSHealthComponent* HealthComponent, float He
     }
 }
 
-void ACSCharacter::PossessedBy(AController* NewController)
-{
-    Super::PossessedBy(NewController);
+//////////////////////////////////////////////////////////////////////////
+// Reading Data
 
-    if (AbilitySystem)
-        AbilitySystem->RefreshAbilityActorInfo();
+FName ACSCharacter::GetWeaponAttachPoint() const
+{
+    return WeaponAttachSocketName;
 }
+
+FVector ACSCharacter::GetPawnViewLocation() const
+{
+    if (CameraComp)
+        return CameraComp->GetComponentLocation();
+
+    return Super::GetPawnViewLocation();
+}
+
+UAbilitySystemComponent* ACSCharacter::GetAbilitySystemComponent() const
+{
+    return AbilitySystem;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Replication
 
 void ACSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

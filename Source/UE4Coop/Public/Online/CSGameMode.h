@@ -62,6 +62,10 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "GameMode")
     bool bAllowFriendlyFire;
 
+    /** The amount of score a player gains when killing an enemy */
+    UPROPERTY(EditDefaultsOnly, Category = "GameMode")
+    float ScorePerKill;
+
 public:
 
     ACSGameMode();
@@ -71,6 +75,9 @@ public:
     /** Whether or not this Game Mode allows friendly fire */
     UFUNCTION(BlueprintCallable, Category = "GameMode")
     bool IsFriendlyFireAllowed();
+
+    /** Notify this GameMode about kills */
+    virtual void Killed(AController* Killer, AController* KilledPlayer, APawn* KilledPawn, const UDamageType* DamageType);
 
     UPROPERTY(BlueprintAssignable, Category = "GameMode")
     FOnActorKilled OnActorKilled;

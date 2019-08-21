@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "CSWeapon.generated.h"
 
+class ACSCharacter;
 class USkeletalMeshComponent;
 class UDamageType;
 class UParticleSystem;
@@ -44,15 +45,41 @@ public:
 
 protected:
 
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+    /** Begin AActor Interface */
+    virtual void BeginPlay() override;
+    /** End AActor Interface */
 
+public:
+
+    //////////////////////////////////////////////////////////////////////////
+    // Input
+
+    /** [local] Start fire called by pawn */
+    void StartFire();
+
+    /** [local] Stop fire called by pawn */
+    void StopFire();
+
+public:
+
+    //////////////////////////////////////////////////////////////////////////
+    // Weapon Usage
+
+    /** [server] Owner pawn is equipping weapon */
+    virtual void OnEquip(ACSCharacter* Character);
+
+protected:
+
+    /** [server + local] Fire the weapon, do damage and play fire FX */
     virtual void Fire();
 
     UFUNCTION(Server, Reliable, WithValidation)
     void ServerFire();
 
+    /** [local] Player fire FX */
     virtual void PlayFireEffects(FHitResult Hit, FVector TraceEnd, bool bDidHit, EPhysicalSurface SurfaceType);
+
+protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     USkeletalMeshComponent* MeshComp;
@@ -97,15 +124,13 @@ protected:
 
     FTimerHandle TimerHandle_TimeBetweenShots;
 
+    /** Pawn owning this weapon */
+    UPROPERTY(Transient, Replicated)
+    ACSCharacter* MyPawn;
+
     UPROPERTY(ReplicatedUsing=OnRep_HitScanTrace)
     FHitScanTrace HitScanTrace;
 
     UFUNCTION()
     void OnRep_HitScanTrace();
-
-public:
-
-    void StartFire();
-
-    void StopFire();
 };

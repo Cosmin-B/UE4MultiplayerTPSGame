@@ -2,7 +2,10 @@
 
 
 #include "CSWeapon.h"
+#include "CSCharacter.h"
 #include "CSTypes.h"
+#include "CSPlayerState.h"
+#include "CSHealthComponent.h"
 
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Kismet\GameplayStatics.h"
@@ -36,10 +39,11 @@ ACSWeapon::ACSWeapon()
     NetUpdateFrequency = 66.0f;
     MinNetUpdateFrequency = 33.0f;
 
+    MyPawn = nullptr;
+
     SetReplicates(true);
 }
 
-// Called when the game starts or when spawned
 void ACSWeapon::BeginPlay()
 {
 	Super::BeginPlay();
@@ -47,68 +51,8 @@ void ACSWeapon::BeginPlay()
     TimeBetweenShots = 60 / RateOfFire;
 }
 
-void ACSWeapon::Fire()
-{
-    if (Role < ROLE_Authority)
-        ServerFire();
-
-    AActor* MyOwner = GetOwner();
-    
-    if (MyOwner == nullptr)
-        return;
-
-    FVector EyeLocation;
-    FRotator EyeRotation;
-    MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
-
-    FVector ShotDirection   = EyeRotation.Vector();
-
-    float halfConeAngle = FMath::DegreesToRadians(ShootConeAngle * 0.5f);
-
-    ShotDirection = FMath::VRandCone(ShotDirection, halfConeAngle, halfConeAngle);
-
-    FVector TraceEnd        = EyeLocation + (ShotDirection * 10000);
-
-    FCollisionQueryParams QueryParams;
-
-    QueryParams.AddIgnoredActor(MyOwner);
-    QueryParams.AddIgnoredActor(this);
-
-    QueryParams.bTraceComplex           = true;
-    QueryParams.bReturnPhysicalMaterial = true;
-
-    if (DebugWeaponDrawing)
-        DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
-
-    FHitResult Hit;
-
-    bool bDidHit = GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams);
-
-    EPhysicalSurface SurfaceType = EPhysicalSurface::SurfaceType_Default;
-
-    if (bDidHit && MyOwner->HasAuthority())
-    {
-        AActor* HitActor = Hit.GetActor();
-
-        SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
-
-        float FinalDamage = SurfaceType == SURFACE_FLESHVULNERABLE ? VulnerableDamage : BaseDamage;
-
-        UGameplayStatics::ApplyPointDamage(HitActor, FinalDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), MyOwner, DamageType);
-    }
-
-    PlayFireEffects(Hit, TraceEnd, bDidHit, SurfaceType);
-
-    if (Role == ROLE_Authority)
-    {
-        HitScanTrace.Hit = Hit;
-        HitScanTrace.TraceEnd = TraceEnd;
-        HitScanTrace.bDidHit = bDidHit;
-        HitScanTrace.ReplicationCount = HitScanTrace.ReplicationCount + 1;
-    }
-
-    LastFireTime = GetWorld()->TimeSeconds;
-}
+//////////////////////////////////////////////////////////////////////////
+// Input
 
 void ACSWeapon::StartFire()
 {
@@ -120,6 +64,89 @@ void ACSWeapon::StartFire()
 void ACSWeapon::StopFire()
 {
     GetWorldTimerManager().ClearTimer(TimerHandle_TimeBetweenShots);
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Weapon Usage
+
+void ACSWeapon::OnEquip(ACSCharacter* Character)
+{
+    SetOwner(Character);
+
+    AttachToComponent(
+        Character->GetMesh(), 
+        FAttachmentTransformRules::SnapToTargetNotIncludingScale, 
+        Character->GetWeaponAttachPoint());
+
+    MyPawn = Character;
+}
+
+void ACSWeapon::Fire()
+{
+    if (Role < ROLE_Authority)
+        ServerFire();
+    
+    if (!MyPawn)
+        return;
+
+    FVector EyeLocation;
+    FRotator EyeRotation;
+    MyPawn->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+
+    FVector ShotDirection   = EyeRotation.Vector();
+
+    float halfConeAngle = FMath::DegreesToRadians(ShootConeAngle * 0.5f);
+
+    ShotDirection = FMath::VRandCone(ShotDirection, halfConeAngle, halfConeAngle);
+
+    FVector TraceEnd        = EyeLocation + (ShotDirection * 10000);
+
+    FCollisionQueryParams QueryParams;
+
+    QueryParams.AddIgnoredActor(MyPawn);
+    QueryParams.AddIgnoredActor(this);
+
+    QueryParams.bTraceComplex           = true;
+    QueryParams.bReturnPhysicalMaterial = true;
+
+    if (DebugWeaponDrawing)
+        DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
+
+    FHitResult Hit;
+
+    // TODO: Do a better hit confirmation
+    bool bDidHit = GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams);
+
+    EPhysicalSurface SurfaceType = EPhysicalSurface::SurfaceType_Default;
+
+    if (bDidHit && MyPawn->HasAuthority())
+    {
+        AActor* HitActor = Hit.GetActor();
+
+        SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+
+        float FinalDamage = SurfaceType == SURFACE_FLESHVULNERABLE ? VulnerableDamage : BaseDamage;
+
+        UGameplayStatics::ApplyPointDamage(HitActor, FinalDamage, ShotDirection, Hit, MyPawn->Controller, MyPawn, DamageType);
+
+        if (MyPawn && HitActor && HitActor != MyPawn && HitActor->GetComponentByClass(UCSHealthComponent::StaticClass()))
+            MyPawn->RegisterAction(ECharacterAction::ShotHit);
+    }
+
+    PlayFireEffects(Hit, TraceEnd, bDidHit, SurfaceType);
+
+    if (Role == ROLE_Authority)
+    {
+        if (MyPawn)
+            MyPawn->RegisterAction(ECharacterAction::ShotFire);
+
+        HitScanTrace.Hit = Hit;
+        HitScanTrace.TraceEnd = TraceEnd;
+        HitScanTrace.bDidHit = bDidHit;
+        HitScanTrace.ReplicationCount = HitScanTrace.ReplicationCount + 1;
+    }
+
+    LastFireTime = GetWorld()->TimeSeconds;
 }
 
 void ACSWeapon::PlayFireEffects(FHitResult Hit, FVector TraceEnd, bool bDidHit, EPhysicalSurface SurfaceType)
@@ -137,11 +164,9 @@ void ACSWeapon::PlayFireEffects(FHitResult Hit, FVector TraceEnd, bool bDidHit, 
             TracerComp->SetVectorParameter("BeamEnd", bDidHit ? Hit.ImpactPoint : TraceEnd);
     }
 
-    APawn* MyOwner = Cast<APawn>(GetOwner());
-
-    if (MyOwner)
+    if (MyPawn)
     {
-        APlayerController* PlayerController = Cast<APlayerController>(MyOwner->GetController());
+        APlayerController* PlayerController = Cast<APlayerController>(MyPawn->GetController());
 
         if (PlayerController)
             PlayerController->ClientPlayCameraShake(FireCamShake);
@@ -186,5 +211,9 @@ void ACSWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+    // Replicate to everyone
+    DOREPLIFETIME(ACSWeapon, MyPawn);
+
+    // Replicate to everyone except the local owner
     DOREPLIFETIME_CONDITION(ACSWeapon, HitScanTrace, COND_SkipOwner);
 }

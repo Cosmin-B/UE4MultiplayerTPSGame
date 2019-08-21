@@ -162,3 +162,14 @@ bool ACSGameMode::IsFriendlyFireAllowed()
 {
     return bAllowFriendlyFire;
 }
+
+void ACSGameMode::Killed(AController* Killer, AController* KilledPlayer, APawn* KilledPawn, const UDamageType* DamageType)
+{
+    ACSPlayerState* KillerPlayerState = Killer ? Cast<ACSPlayerState>(Killer->PlayerState) : nullptr;
+    ACSPlayerState* VictimPlayerState = KilledPlayer ? Cast<ACSPlayerState>(Killer->PlayerState) : nullptr;
+
+    if (KillerPlayerState && KillerPlayerState != VictimPlayerState)
+        KillerPlayerState->ScoreKill(ScorePerKill);
+
+    OnActorKilled.Broadcast(KilledPawn, Killer->GetPawn(), Killer);
+}

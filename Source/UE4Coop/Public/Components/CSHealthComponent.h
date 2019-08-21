@@ -24,6 +24,7 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+    UPROPERTY(Transient, Replicated)
     bool bIsDead;
 
     UPROPERTY(ReplicatedUsing = OnRep_Health, BlueprintReadOnly, Category="HealthComponent")

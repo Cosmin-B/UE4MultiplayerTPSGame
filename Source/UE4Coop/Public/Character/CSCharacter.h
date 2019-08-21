@@ -24,6 +24,17 @@ enum class EAbilityInput : uint8
     UseAbility4 UMETA(DisplayName = "Use Spell 4"),
 };
 
+UENUM(BlueprintType)
+enum class ECharacterAction : uint8
+{
+    ShotFire        UMETA(DisplayName = "Shot Fire"),
+    ShotHit         UMETA(DisplayName = "Shot Hit"),
+    DamageDone      UMETA(DisplayName = "Damage Done"),
+    DamageTaken     UMETA(DisplayName = "Damage Taken"),
+
+    MaxAction UMETA(Hidden),
+};
+
 UCLASS()
 class UE4COOP_API ACSCharacter : public ACharacter, public IAbilitySystemInterface
 {
@@ -32,12 +43,24 @@ class UE4COOP_API ACSCharacter : public ACharacter, public IAbilitySystemInterfa
     UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 public:
+
 	// Sets default values for this character's properties
 	ACSCharacter();
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+
+    /** Begin ACharacter Interface */
+    virtual void BeginPlay() override;
+    virtual void Tick(float DeltaTime) override;
+    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    virtual void PossessedBy(AController* NewController) override;
+    virtual FVector GetPawnViewLocation() const override;
+    /** End ACharacter Interface */
+
+protected:
+
+    //////////////////////////////////////////////////////////////////////////
+    // Input
 
     void MoveForward(float Value);
 
@@ -53,12 +76,20 @@ protected:
 
     void EndZoom();
 
+    UFUNCTION(BlueprintCallable, Category = "Player")
+    void StartFire();
+
+    UFUNCTION(BlueprintCallable, Category = "Player")
+    void StopFire();
+
+protected:
+
+    //////////////////////////////////////////////////////////////////////////
+    // Damage and health system
+
     UFUNCTION()
     void OnHealthChanged(UCSHealthComponent* OwningHealthComp, float Health, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
-    void PossessedBy(AController* NewController) override;
-
-    virtual FVector GetPawnViewLocation() const override;
 protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -97,20 +128,19 @@ protected:
 
     UPROPERTY(Replicated)
     bool bDied;
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+public:
 
     UFUNCTION(BlueprintCallable, Category = "Player | Abilities")
     void AcquireAbility(TSubclassOf<UGameplayAbility> AbiltyToAcquire);
 
-    UFUNCTION(BlueprintCallable, Category = "Player")
-    void StartFire();
+    //////////////////////////////////////////////////////////////////////////
+    // Statistics
 
-    UFUNCTION(BlueprintCallable, Category = "Player")
-    void StopFire();
+    void RegisterAction(ECharacterAction Action, float Amount = 0.0f);
 
+public:
+
+    /** Get Weapon Socket Name */
+    FName GetWeaponAttachPoint() const;
 };
