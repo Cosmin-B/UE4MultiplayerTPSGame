@@ -537,6 +537,21 @@ float ACSWeapon::GetWeaponRange() const
     return WeaponConfig.WeaponRange;
 }
 
+float ACSWeapon::GetCurrentAmmo() const
+{
+    return CurrentAmmo;
+}
+
+float ACSWeapon::GetCurrentAmmoInClip() const
+{
+    return CurrentAmmoInClip;
+}
+
+float ACSWeapon::GetCurrentAmmoInMagazine() const
+{
+    return CurrentAmmoInMagazine;
+}
+
 EWeaponState ACSWeapon::GetCurrentState() const
 {
     return CurrentState;

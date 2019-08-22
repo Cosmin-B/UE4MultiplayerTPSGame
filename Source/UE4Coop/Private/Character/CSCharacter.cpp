@@ -15,6 +15,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "TimerManager.h"
 
 // Sets default values
 ACSCharacter::ACSCharacter()
@@ -64,14 +65,11 @@ void ACSCharacter::BeginPlay()
     {
         bDied = false;
 
-        // Spawn a default weapon
-        FActorSpawnParameters SpawnParams;
-        SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+        // TODO: Make this a member variable and expose it to blueprint
+        const float DelayToSpawnDefaultWeapon = 0.5f;
 
-        CurrentWeapon = GetWorld()->SpawnActor<ACSWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-
-        if (CurrentWeapon)
-            CurrentWeapon->OnEquip(this);
+        FTimerHandle TimerHandle_SpawnDefaultWeapon;
+        GetWorldTimerManager().SetTimer(TimerHandle_SpawnDefaultWeapon, this, &ACSCharacter::SpawnDefaultWeapon, DelayToSpawnDefaultWeapon, false);
     }
 }
 
@@ -210,6 +208,31 @@ bool ACSCharacter::CanFire() const
 bool ACSCharacter::CanReload() const
 {
     return true;
+}
+
+void ACSCharacter::SpawnDefaultWeapon()
+{
+    // Spawn a default weapon
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+    ACSWeapon* Weapon = GetWorld()->SpawnActor<ACSWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+    EquipWeapon(Weapon);
+}
+
+void ACSCharacter::EquipWeapon(ACSWeapon* NewWeapon)
+{
+    if (!HasAuthority())
+        return;
+
+    // TODO: Unequip last weapon
+
+    CurrentWeapon = NewWeapon;
+
+    if (CurrentWeapon)
+        CurrentWeapon->OnEquip(this);
+
+    OnWeaponEquip.Broadcast(this, CurrentWeapon);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -369,6 +392,12 @@ UAbilitySystemComponent* ACSCharacter::GetAbilitySystemComponent() const
 
 //////////////////////////////////////////////////////////////////////////
 // Replication
+
+void ACSCharacter::OnRep_CurrentWeapon()
+{
+    if (Controller && Controller->IsLocalController())
+        OnWeaponEquip.Broadcast(this, CurrentWeapon);
+}
 
 void ACSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

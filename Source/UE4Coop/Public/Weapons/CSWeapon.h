@@ -214,6 +214,18 @@ public:
     UFUNCTION(BlueprintCallable, Category = "WeaponStats")
     float GetWeaponRange() const;
 
+    /** Get total ammo */
+    UFUNCTION(BlueprintPure, Category = "WeaponStats")
+    float GetCurrentAmmo() const;
+
+    /** Get current ammo in clip */
+    UFUNCTION(BlueprintPure, Category = "WeaponStats")
+    float GetCurrentAmmoInClip() const;
+
+    /** Get Ammo in magazine */
+    UFUNCTION(BlueprintPure, Category = "WeaponStats")
+    float GetCurrentAmmoInMagazine() const;
+
     /** Get current weapon state */
     EWeaponState GetCurrentState() const;
 

@@ -18,6 +18,8 @@ class UAbilitySystemComponent;
 /** Event for aim state being changed */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FCharacterAimStateChangedSignature, ACSCharacter*, Character, bool, NewState);
 
+/** Event for aim state being changed */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FCharactereEquipWeaponSignature, ACSCharacter*, Character, ACSWeapon*, NewWeapon);
 
 UENUM(BlueprintType)
 enum class EAbilityInput : uint8
@@ -117,6 +119,12 @@ public:
     /** Check if pawn can reload weapon */
     bool CanReload() const;
 
+    /** Spawn default weapon */
+    virtual void SpawnDefaultWeapon();
+
+    /** Equip New Weapon and broadcast the event */
+    virtual void EquipWeapon(ACSWeapon* NewWeapon);
+
     //////////////////////////////////////////////////////////////////////////
     // Animations
 
@@ -151,6 +159,13 @@ protected:
 
     UFUNCTION()
     void OnHealthChanged(UCSHealthComponent* OwningHealthComp, float Health, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+    //////////////////////////////////////////////////////////////////////////
+    // Replication
+
+    /** Update hud when current weapon has changed */
+    UFUNCTION()
+    void OnRep_CurrentWeapon();
 
 protected:
 
@@ -187,7 +202,7 @@ protected:
     UPROPERTY(VisibleDefaultsOnly, Category = "Player")
     FName WeaponAttachSocketName;
 
-    UPROPERTY(Replicated)
+    UPROPERTY(Transient, ReplicatedUsing = OnRep_CurrentWeapon)
     ACSWeapon* CurrentWeapon;
 
     UPROPERTY(EditDefaultsOnly, Category = "Player")
@@ -201,6 +216,10 @@ public:
     /** Event raised on aiming is changed */
     UPROPERTY(BlueprintAssignable, Category = "Player")
     FCharacterAimStateChangedSignature OnAimStateChange;
+
+    /** Event raised when character equips new weapon */
+    UPROPERTY(BlueprintAssignable, Category = "Player")
+    FCharactereEquipWeaponSignature OnWeaponEquip;
 
     UFUNCTION(BlueprintCallable, Category = "Player | Abilities")
     void AcquireAbility(TSubclassOf<UGameplayAbility> AbiltyToAcquire);
