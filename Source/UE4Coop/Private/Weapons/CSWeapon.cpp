@@ -366,8 +366,7 @@ void ACSWeapon::HandleFiring()
 
     if (MyPawn && MyPawn->IsLocallyControlled())
     {
-        // Local client will notify server
-        if (Role < ROLE_Authority)
+        if (MyPawn->Role < ENetRole::ROLE_Authority)
             ServerHandleFiring();
 
         // Reload after firing last round
@@ -456,7 +455,7 @@ void ACSWeapon::DetermineWeaponState()
     else if (!bPendingReload && bWantsToFire && CanFire())
         NewState = EWeaponState::Firing;
 
-    SetWeaponState(EWeaponState::Firing);
+    SetWeaponState(NewState);
 }
 
 void ACSWeapon::SetWeaponState(EWeaponState NewState)
@@ -464,12 +463,12 @@ void ACSWeapon::SetWeaponState(EWeaponState NewState)
     const EWeaponState PrevState = CurrentState;
 
     if (PrevState == EWeaponState::Firing && NewState != EWeaponState::Firing)
-        OnFireStarted();
+        OnFireFinished();
 
     CurrentState = NewState;
 
     if (PrevState != EWeaponState::Firing && NewState == EWeaponState::Firing)
-        OnFireFinished();
+        OnFireStarted();
 }
 
 void ACSWeapon::PlayFireEffects(FHitResult Hit, FVector TraceEnd, bool bDidHit, EPhysicalSurface SurfaceType)
