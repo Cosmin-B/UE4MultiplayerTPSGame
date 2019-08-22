@@ -42,6 +42,9 @@ ACSCharacter::ACSCharacter()
     ZoomedFOV = 65.5f;
     ZoomInterpSpeed = 20.0f;
 
+    bWasAiming = false;
+    bAiming = false;
+
     WeaponAttachSocketName = "WeaponSocket";
 }
 
@@ -85,7 +88,7 @@ void ACSCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-    float TargetFOV = bWantsToZoom ? ZoomedFOV : DefaultFOV;
+    float TargetFOV = IsAiming() ? ZoomedFOV : DefaultFOV;
     float NewFOV    = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime, ZoomInterpSpeed);
 
     CameraComp->SetFieldOfView(NewFOV);
@@ -104,13 +107,15 @@ void ACSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
     PlayerInputComponent->BindAxis("LookUp", this, &ACSCharacter::AddControllerPitchInput);
     PlayerInputComponent->BindAxis("Turn", this, &ACSCharacter::AddControllerYawInput);
 
+    PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ACSCharacter::OnStartReload);
+
     PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ACSCharacter::BeginCrouch);
     PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ACSCharacter::EndCrouch);
 
     PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACSCharacter::MoveJump);
 
-    PlayerInputComponent->BindAction("Zoom", IE_Pressed, this, &ACSCharacter::BeginZoom);
-    PlayerInputComponent->BindAction("Zoom", IE_Released, this, &ACSCharacter::EndZoom);
+    PlayerInputComponent->BindAction("Zoom", IE_Pressed, this, &ACSCharacter::OnStartAiming);
+    PlayerInputComponent->BindAction("Zoom", IE_Released, this, &ACSCharacter::OnStopAiming);
 
     PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ACSCharacter::StartFire);
     PlayerInputComponent->BindAction("Fire", IE_Released, this, &ACSCharacter::StopFire);
@@ -144,6 +149,23 @@ void ACSCharacter::MoveJump()
     Jump();
 }
 
+void ACSCharacter::OnStartReload()
+{
+    if (CurrentWeapon)
+    {
+        // Disable aiming while reloading
+        if (CurrentWeapon->CanReload())
+            SetAiming(false);
+
+        CurrentWeapon->StartReload();
+    }
+}
+
+void ACSCharacter::OnStopReload()
+{
+    SetAiming(bWasAiming);
+}
+
 void ACSCharacter::BeginCrouch()
 {
     Crouch();
@@ -154,14 +176,15 @@ void ACSCharacter::EndCrouch()
     UnCrouch();
 }
 
-void ACSCharacter::BeginZoom()
+void ACSCharacter::OnStartAiming()
 {
-    bWantsToZoom = true;
+    SetAiming(true);
 }
 
-void ACSCharacter::EndZoom()
+void ACSCharacter::OnStopAiming()
 {
-    bWantsToZoom = false;
+    SetAiming(false);
+    bWasAiming = false;
 }
 
 void ACSCharacter::StartFire()
@@ -257,6 +280,37 @@ void ACSCharacter::RegisterAction(ECharacterAction Action, float Amount /*= 0*/)
     }
 }
 
+void ACSCharacter::SetAiming(bool bNewAiming)
+{
+    if (bNewAiming)
+    {
+        // Don't aim down sights if the character is not holding any weapon
+        if (!CurrentWeapon)
+            return;
+
+        // Don't aim if the character is reloading
+        if (CurrentWeapon->IsReloading())
+            return;
+    }
+
+    bWasAiming = bAiming;
+
+    bAiming = bNewAiming;
+
+    if (!HasAuthority())
+        ServerSetAiming(bNewAiming);
+}
+
+void ACSCharacter::ServerSetAiming_Implementation(bool bNewAiming)
+{
+    SetAiming(bNewAiming);
+}
+
+bool ACSCharacter::ServerSetAiming_Validate(bool bNewAiming)
+{
+    return true;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Damage and health system
 
@@ -277,6 +331,11 @@ void ACSCharacter::OnHealthChanged(UCSHealthComponent* HealthComponent, float He
 
 //////////////////////////////////////////////////////////////////////////
 // Reading Data
+
+bool ACSCharacter::IsAiming() const
+{
+    return bAiming;
+}
 
 FName ACSCharacter::GetWeaponAttachPoint() const
 {
@@ -305,4 +364,5 @@ void ACSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 
     DOREPLIFETIME(ACSCharacter, CurrentWeapon);
     DOREPLIFETIME(ACSCharacter, bDied);
+    DOREPLIFETIME(ACSCharacter, bAiming);
 }

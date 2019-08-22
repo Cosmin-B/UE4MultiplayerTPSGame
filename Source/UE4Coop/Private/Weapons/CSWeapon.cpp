@@ -115,8 +115,8 @@ void ACSWeapon::StartReload(bool bFromReplication /*= false*/)
 
         if (HasAuthority())
         {
-            //if (MyPawn)
-            //    MyPawn->SetAiming(false);
+            if (MyPawn)
+                MyPawn->SetAiming(false);
 
             bReloading = true;
             GetWorldTimerManager().SetTimer(TimerHandle_ReloadWeapon, this, &ACSWeapon::ReloadWeapon, FMath::Max(0.1f, AnimDuration - 0.1f), false);
@@ -135,7 +135,8 @@ void ACSWeapon::StopReload()
 
         StopAnimation(ReloadAnim);
 
-        // MyPawn->OnStopReload();
+        if(MyPawn)
+            MyPawn->OnStopReload();
     }
 }
 
@@ -560,6 +561,13 @@ void ACSWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
     // Replicate to everyone
     DOREPLIFETIME(ACSWeapon, MyPawn);
 
+    // Replicate to local owner only
+    DOREPLIFETIME_CONDITION(ACSWeapon, bReloading, COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(ACSWeapon, CurrentAmmo, COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(ACSWeapon, CurrentAmmoInClip, COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(ACSWeapon, CurrentAmmoInMagazine, COND_OwnerOnly);
+
     // Replicate to everyone except the local owner
     DOREPLIFETIME_CONDITION(ACSWeapon, HitScanTrace, COND_SkipOwner);
+    DOREPLIFETIME_CONDITION(ACSWeapon, bPendingReload, COND_SkipOwner);
 }

@@ -62,23 +62,43 @@ protected:
     //////////////////////////////////////////////////////////////////////////
     // Input
 
+    /**
+    * Move forward/back
+    *
+    * @param Value Movement input to apply
+    */
     void MoveForward(float Value);
 
+    /**
+    * Strafe right/left
+    *
+    * @param Value Movement input to apply
+    */
     void MoveRight(float Value);
 
+    /** Player pressed jump action */
     void MoveJump();
 
+    /** Player pressed crouch action */
     void BeginCrouch();
 
+    /** Player released crouch action */
     void EndCrouch();
 
-    void BeginZoom();
+    /** Player pressed reload action */
+    void OnStartReload();
 
-    void EndZoom();
+    /** Player pressed Aim Down Sights action */
+    void OnStartAiming();
 
+    /** Player released Aim Down Sights action */
+    void OnStopAiming();
+
+    /** Player pressed fire action */
     UFUNCTION(BlueprintCallable, Category = "Player")
     void StartFire();
 
+    /** Player released fire action */
     UFUNCTION(BlueprintCallable, Category = "Player")
     void StopFire();
 
@@ -105,7 +125,22 @@ public:
     /** Stop playing all montages */
     void StopAllAnimMontages();
 
+public:
+
+    /** Performs character checks when the reloading is complete (Not input related)*/
+    void OnStopReload();
+
+    //////////////////////////////////////////////////////////////////////////
+    // Camera
+
+    /** [server + local] change targeting state */
+    void SetAiming(bool bNewAiming);
+
 protected:
+
+    /** Update targeting state */
+    UFUNCTION(Reliable, server, WithValidation)
+    void ServerSetAiming(bool bNewAiming);
 
     //////////////////////////////////////////////////////////////////////////
     // Damage and health system
@@ -130,8 +165,6 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess="true"))
     UCSAttributeSet*	AttributeSet;
 
-    bool bWantsToZoom;
-
     UPROPERTY(EditDefaultsOnly, Category = "Player")
     float ZoomedFOV;
 
@@ -139,6 +172,13 @@ protected:
     float ZoomInterpSpeed;
 
     float DefaultFOV;
+
+    /** Check if character was aiming before start reloading */
+    bool bWasAiming;
+
+    /** Is Aiming Down Sights? */
+    UPROPERTY(Transient, Replicated)
+    bool bAiming;
 
     UPROPERTY(VisibleDefaultsOnly, Category = "Player")
     FName WeaponAttachSocketName;
@@ -163,6 +203,13 @@ public:
     void RegisterAction(ECharacterAction Action, float Amount = 0.0f);
 
 public:
+
+    //////////////////////////////////////////////////////////////////////////
+    // Reading data
+
+    /** Check if pawn is aiming down sights */
+    UFUNCTION(BlueprintCallable, Category = "Character")
+    bool IsAiming() const;
 
     /** Get Weapon Socket Name */
     FName GetWeaponAttachPoint() const;
