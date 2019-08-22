@@ -393,7 +393,7 @@ void ACSWeapon::Fire()
 
     float HalfConeAngle = FMath::DegreesToRadians(ShootConeAngle * 0.5f);
     ShotDirection = FMath::VRandCone(ShotDirection, HalfConeAngle, HalfConeAngle);
-    FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
+    FVector TraceEnd = EyeLocation + (ShotDirection * WeaponConfig.WeaponRange);
 
     FCollisionQueryParams QueryParams;
 
@@ -530,6 +530,11 @@ bool ACSWeapon::HasInfiniteClip() const
 bool ACSWeapon::IsReloading() const
 {
     return bReloading;
+}
+
+float ACSWeapon::GetWeaponRange() const
+{
+    return WeaponConfig.WeaponRange;
 }
 
 EWeaponState ACSWeapon::GetCurrentState() const

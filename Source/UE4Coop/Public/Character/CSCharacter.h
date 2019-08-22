@@ -15,6 +15,10 @@ class UGameplayAbility;
 class UCSAttributeSet;
 class UAbilitySystemComponent;
 
+/** Event for aim state being changed */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FCharacterAimStateChangedSignature, ACSCharacter*, Character, bool, NewState);
+
+
 UENUM(BlueprintType)
 enum class EAbilityInput : uint8
 {
@@ -194,6 +198,10 @@ protected:
 
 public:
 
+    /** Event raised on aiming is changed */
+    UPROPERTY(BlueprintAssignable, Category = "Player")
+    FCharacterAimStateChangedSignature OnAimStateChange;
+
     UFUNCTION(BlueprintCallable, Category = "Player | Abilities")
     void AcquireAbility(TSubclassOf<UGameplayAbility> AbiltyToAcquire);
 
@@ -206,6 +214,14 @@ public:
 
     //////////////////////////////////////////////////////////////////////////
     // Reading data
+
+    // Current equipped weapon
+    UFUNCTION(BlueprintCallable, Category = "Character")
+    ACSWeapon* GetCurrentWeapon() const;
+
+    // Get health component
+    UFUNCTION(BlueprintCallable, Category = "Character")
+    UCSHealthComponent* GetHealthComponent() const;
 
     /** Check if pawn is aiming down sights */
     UFUNCTION(BlueprintCallable, Category = "Character")

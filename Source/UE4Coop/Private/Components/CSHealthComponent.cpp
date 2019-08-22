@@ -102,6 +102,7 @@ void UCSHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 
     DOREPLIFETIME(UCSHealthComponent, bIsDead);
     DOREPLIFETIME(UCSHealthComponent, Health);
+    DOREPLIFETIME(UCSHealthComponent, TeamNum);
 }
 
 void UCSHealthComponent::OnRep_Health(float OldHealth)

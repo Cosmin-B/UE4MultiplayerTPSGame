@@ -299,6 +299,8 @@ void ACSCharacter::SetAiming(bool bNewAiming)
 
     if (!HasAuthority())
         ServerSetAiming(bNewAiming);
+
+    OnAimStateChange.Broadcast(this, bNewAiming);
 }
 
 void ACSCharacter::ServerSetAiming_Implementation(bool bNewAiming)
@@ -335,6 +337,16 @@ void ACSCharacter::OnHealthChanged(UCSHealthComponent* HealthComponent, float He
 bool ACSCharacter::IsAiming() const
 {
     return bAiming;
+}
+
+ACSWeapon* ACSCharacter::GetCurrentWeapon() const
+{
+    return CurrentWeapon;
+}
+
+UCSHealthComponent* ACSCharacter::GetHealthComponent() const
+{
+    return HealthComp;
 }
 
 FName ACSCharacter::GetWeaponAttachPoint() const

@@ -71,6 +71,10 @@ struct FWeaponData
     UPROPERTY(EditDefaultsOnly, Category = "WeaponStats")
     float NoAnimReloadDuration;
 
+    /** Weapon range */
+    UPROPERTY(EditDefaultsOnly, Category = "WeaponStats")
+    float WeaponRange;
+
     UPROPERTY(EditDefaultsOnly, Category = "Weapon")
     float RateOfFire;
 
@@ -83,6 +87,7 @@ struct FWeaponData
         AmmoPerClip = 20;
         InitialClips = 5;
         RateOfFire = 700.0f;
+        WeaponRange = 10000.0f;
     }
 };
 
@@ -204,6 +209,10 @@ public:
     /** Check if weapon is reloading*/
     UFUNCTION(BlueprintCallable, Category = "Weapon")
     bool IsReloading() const;
+
+    /** Current Weapon Range */
+    UFUNCTION(BlueprintCallable, Category = "WeaponStats")
+    float GetWeaponRange() const;
 
     /** Get current weapon state */
     EWeaponState GetCurrentState() const;
