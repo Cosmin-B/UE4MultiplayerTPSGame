@@ -423,8 +423,12 @@ void ACSWeapon::Fire()
 
         UGameplayStatics::ApplyPointDamage(HitActor, FinalDamage, ShotDirection, Hit, MyPawn->Controller, MyPawn, DamageType);
 
-        if (MyPawn && HitActor && HitActor != MyPawn && HitActor->GetComponentByClass(UCSHealthComponent::StaticClass()))
-            MyPawn->RegisterAction(ECharacterAction::ShotHit);
+        if (MyPawn && HitActor && HitActor != MyPawn)
+        {
+            UCSHealthComponent* HealthComp = HitActor->GetComponentByClass(UCSHealthComponent::StaticClass());
+            if (HealthComp && !HealthComp->IsDead())
+                MyPawn->RegisterAction(ECharacterAction::ShotHit);
+        }
     }
 
     PlayFireEffects(Hit, TraceEnd, bDidHit, SurfaceType);
