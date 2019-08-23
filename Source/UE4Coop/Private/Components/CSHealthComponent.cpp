@@ -5,6 +5,7 @@
 #include "CSGameMode.h"
 #include "CSCharacter.h"
 
+#include "GameFramework/DamageType.h"
 #include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
 
@@ -65,6 +66,10 @@ void UCSHealthComponent::OnDamageTaken(AActor* DamagedActor, float Damage, const
     ACSCharacter* CSOwner = Cast<ACSCharacter>(GetOwner());
     if (CSOwner)
     {
+        // If owner is player send a client OnDamageTaken event broadcast
+        if (CSOwner->Controller && CSOwner->Controller->PlayerState)
+            ClientDamageTaken(Damage, InstigatedBy, DamageCauser);
+
         CSOwner->RegisterAction(ECharacterAction::DamageTaken, Damage);
 
         if (bIsDead)
@@ -94,6 +99,18 @@ bool UCSHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
         return true;
 
     return HealthCompA->TeamNum == HealthCompB->TeamNum;
+}
+
+void UCSHealthComponent::ClientDamageTaken_Implementation(float Damage, class AController* InstigatedBy, AActor* DamageCauser)
+{
+    AActor* MyOwner = GetOwner();
+    if (MyOwner)
+        MyOwner->OnTakeAnyDamage.Broadcast(MyOwner, Damage, nullptr, InstigatedBy, DamageCauser);
+}
+
+bool UCSHealthComponent::ClientDamageTaken_Validate(float Damage, class AController* InstigatedBy, AActor* DamageCauser)
+{
+    return true;
 }
 
 void UCSHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

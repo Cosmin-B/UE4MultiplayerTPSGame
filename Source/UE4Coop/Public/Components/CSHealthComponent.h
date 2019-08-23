@@ -56,6 +56,9 @@ protected:
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HealthComponent")
     static bool IsFriendly(AActor* ActorA, AActor* ActorB);
 
+    UFUNCTION(Reliable, Client, WithValidation)
+    void ClientDamageTaken(float Damage, class AController* InstigatedBy, AActor* DamageCauser);
+
     UFUNCTION()
     void OnDamageTaken(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 };
