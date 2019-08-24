@@ -136,6 +136,7 @@ public:
     void StopFire();
 
     /** [all] Start reload called by the pawn */
+    UFUNCTION(BlueprintCallable, Category = "Weapon")
     void StartReload(bool bFromReplication = false);
 
     /** [local + server] Interrupt weapon reload */
@@ -210,6 +211,10 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Weapon")
     bool IsReloading() const;
 
+    /** Get reload animation length*/
+    UFUNCTION(BlueprintPure, Category = "Weapon")
+    float GetReloadAnimationLength() const;
+
     /** Current Weapon Range */
     UFUNCTION(BlueprintCallable, Category = "WeaponStats")
     float GetWeaponRange() const;
@@ -225,6 +230,10 @@ public:
     /** Get Ammo in magazine */
     UFUNCTION(BlueprintPure, Category = "WeaponStats")
     float GetCurrentAmmoInMagazine() const;
+
+    /** Get max ammo */
+    UFUNCTION(BlueprintPure, Category = "WeaponStats")
+    float GetMaxAmmo() const;
 
     /** Get current weapon state */
     EWeaponState GetCurrentState() const;

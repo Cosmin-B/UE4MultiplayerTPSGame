@@ -6,6 +6,7 @@
 #include "CSTypes.h"
 #include "CSPlayerState.h"
 #include "CSHealthComponent.h"
+#include "CSAIController.h"
 
 #include "Animation/AnimSequence.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
@@ -210,6 +211,10 @@ void ACSWeapon::UseAmmo()
 
     if (!HasInfiniteAmmo())
         CurrentAmmo--;
+
+    ACSAIController* BotAI = MyPawn ? Cast<ACSAIController>(MyPawn->GetController()) : nullptr;
+    if (BotAI)
+        BotAI->CheckAmmo(this);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -536,6 +541,16 @@ bool ACSWeapon::IsReloading() const
     return bReloading;
 }
 
+float ACSWeapon::GetReloadAnimationLength() const
+{
+    float Duration = 0.0f;
+
+    if (ReloadAnim.Pawn)
+        Duration = ReloadAnim.Pawn->GetPlayLength();
+
+    return Duration;
+}
+
 float ACSWeapon::GetWeaponRange() const
 {
     return WeaponConfig.WeaponRange;
@@ -554,6 +569,11 @@ float ACSWeapon::GetCurrentAmmoInClip() const
 float ACSWeapon::GetCurrentAmmoInMagazine() const
 {
     return CurrentAmmoInMagazine;
+}
+
+float ACSWeapon::GetMaxAmmo() const
+{
+    return WeaponConfig.MaxAmmo;
 }
 
 EWeaponState ACSWeapon::GetCurrentState() const
