@@ -7,6 +7,7 @@
 #include "CSPlayerState.h"
 #include "CSGameInstance.h"
 
+#include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerState.h"
 #include "GameFramework/GameSession.h"
 #include "Components/CSHealthComponent.h"
@@ -216,6 +217,20 @@ void ACSGameMode::InitGameState()
 
 void ACSGameMode::RespawnDeadPlayers()
 {
+    // Find nearest player connected
+    TArray<AActor*> FoundPlayers;
+    UGameplayStatics::GetAllActorsOfClass(this, ACSCharacter::StaticClass(), FoundPlayers);
+
+    for (AActor* PlayerActor : FoundPlayers)
+    {
+        if (!IsValid(PlayerActor))
+            continue;
+
+        ACSCharacter* CSPlayerActor = Cast<ACSCharacter>(PlayerActor);
+        if (!CSPlayerActor->IsAlive())
+            CSPlayerActor->SetLifeSpan(0.1f);
+    }
+
     for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
     {
         APlayerController* PC = It->Get();
