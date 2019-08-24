@@ -56,6 +56,7 @@ public:
 protected:
 
     /** Begin ACharacter Interface */
+    virtual void PostInitializeComponents() override;
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -211,6 +212,10 @@ protected:
     UPROPERTY(Replicated)
     bool bDied;
 
+    /** Material instances for setting team color on mesh */
+    UPROPERTY(Transient)
+    TArray<class UMaterialInstanceDynamic*> MeshMIDs;
+
 public:
 
     /** Event raised on aiming is changed */
@@ -228,6 +233,15 @@ public:
     // Statistics
 
     void RegisterAction(ECharacterAction Action, float Amount = 0.0f);
+
+    //////////////////////////////////////////////////////////////////////////
+    // Materials
+
+    /** Handle mesh colors on specified material instance */
+    void UpdateTeamColors(UMaterialInstanceDynamic* UseMID);
+
+    /** Update the team color of all player meshes. */
+    void UpdateTeamColorsAllMIDs();
 
 public:
 

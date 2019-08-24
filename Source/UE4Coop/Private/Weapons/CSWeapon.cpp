@@ -425,7 +425,7 @@ void ACSWeapon::Fire()
 
         if (MyPawn && HitActor && HitActor != MyPawn)
         {
-            UCSHealthComponent* HealthComp = HitActor->GetComponentByClass(UCSHealthComponent::StaticClass());
+            UCSHealthComponent* HealthComp = Cast<UCSHealthComponent>(HitActor->GetComponentByClass(UCSHealthComponent::StaticClass()));
             if (HealthComp && !HealthComp->IsDead())
                 MyPawn->RegisterAction(ECharacterAction::ShotHit);
         }

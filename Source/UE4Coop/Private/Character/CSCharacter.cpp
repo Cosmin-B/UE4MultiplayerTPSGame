@@ -7,6 +7,7 @@
 #include "Abilities/CSAttributeSet.h"
 #include "CSPlayerState.h"
 
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Animation/AnimMontage.h"
 #include "AbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
@@ -52,6 +53,15 @@ ACSCharacter::ACSCharacter()
 //////////////////////////////////////////////////////////////////////////
 // ACharacter Interface
 
+void ACSCharacter::PostInitializeComponents()
+{
+    Super::PostInitializeComponents();
+
+    // Create material instance for setting team colors
+    for (int32 iMat = 0; iMat < GetMesh()->GetNumMaterials(); iMat++)
+        MeshMIDs.Add(GetMesh()->CreateAndSetMaterialInstanceDynamic(iMat));
+}
+
 // Called when the game starts or when spawned
 void ACSCharacter::BeginPlay()
 {
@@ -71,6 +81,9 @@ void ACSCharacter::BeginPlay()
         FTimerHandle TimerHandle_SpawnDefaultWeapon;
         GetWorldTimerManager().SetTimer(TimerHandle_SpawnDefaultWeapon, this, &ACSCharacter::SpawnDefaultWeapon, DelayToSpawnDefaultWeapon, false);
     }
+
+    // [server] after healthcomp teamnum is assigned, set team colors of this pawn
+    UpdateTeamColorsAllMIDs();
 }
 
 void ACSCharacter::PossessedBy(AController* NewController)
@@ -79,6 +92,9 @@ void ACSCharacter::PossessedBy(AController* NewController)
 
     if (AbilitySystem)
         AbilitySystem->RefreshAbilityActorInfo();
+
+    // [server] after healthcomp teamnum is assigned, set team colors of this pawn
+    UpdateTeamColorsAllMIDs();
 }
 
 // Called every frame
@@ -303,6 +319,30 @@ void ACSCharacter::RegisterAction(ECharacterAction Action, float Amount /*= 0*/)
     }
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Materials
+
+void ACSCharacter::UpdateTeamColors(UMaterialInstanceDynamic* UseMID)
+{
+    if (UseMID)
+    {
+        if (HealthComp)
+        {
+            float MaterialParam = (float)HealthComp->TeamNum;
+            UseMID->SetScalarParameterValue(TEXT("Team Color Index"), MaterialParam);
+        }
+    }
+}
+
+void ACSCharacter::UpdateTeamColorsAllMIDs()
+{
+    for (int32 i = 0; i < MeshMIDs.Num(); ++i)
+        UpdateTeamColors(MeshMIDs[i]);
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Character Aiming
+
 void ACSCharacter::SetAiming(bool bNewAiming)
 {
     if (bNewAiming)
@@ -345,12 +385,16 @@ void ACSCharacter::OnHealthChanged(UCSHealthComponent* HealthComponent, float He
     {
         bDied = true;
 
-        GetMovementComponent()->StopMovementImmediately();
-        GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        TearOff();
 
         DetachFromControllerPendingDestroy();
 
-        SetLifeSpan(10.0f);
+        GetMovementComponent()->StopMovementImmediately();
+
+        GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
+
+        SetLifeSpan(5.0f);
     }
 }
 
