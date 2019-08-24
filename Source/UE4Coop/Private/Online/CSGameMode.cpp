@@ -3,133 +3,250 @@
 
 #include "CSGameMode.h"
 #include "CSGameState.h"
+#include "CSCharacter.h"
 #include "CSPlayerState.h"
+
+#include "GameFramework/PlayerState.h"
+#include "GameFramework/GameSession.h"
 #include "Components/CSHealthComponent.h"
 #include "TimerManager.h"
 
+namespace MatchState
+{
+    const FName PreRound        = FName(TEXT("PreRound"));
+    const FName RoundInProgress = FName(TEXT("RoundInProgress"));
+    const FName PostRound       = FName(TEXT("PostRound"));
+}
 
 ACSGameMode::ACSGameMode()
 {
-    TimeBetweenWaves = 5.0f;
-
     GameStateClass = ACSGameState::StaticClass();
     PlayerStateClass = ACSPlayerState::StaticClass();
 
     bAllowFriendlyFire = true;
+
+    MaxRoundDuration = 100.0f;
+    MaxScore = 100.0f;
+    TravelDelay = 3.0f;
+
+    RoundsToWin = 2;
+
+    CurrentRound = 0;
+
+    PreRoundDuration = 10.f;
+    PostRoundDuration = 5.f;
 }
 
-void ACSGameMode::StartPlay()
+//////////////////////////////////////////////////////////////////////////
+// Matching System
+
+bool ACSGameMode::IsMatchInProgress() const
 {
-    Super::StartPlay();
+    if (MatchState == MatchState::InProgress
+        || MatchState == MatchState::PreRound
+        || MatchState == MatchState::PostRound
+        || MatchState == MatchState::RoundInProgress)
+        return true;
 
-    PrepareForNextWave();
-
-    GetWorldTimerManager().SetTimer(TimerHandle_CheckWaveState, this, &ACSGameMode::CheckWaveState, 1.0f, true, 0.0f);
-    GetWorldTimerManager().SetTimer(TimerHandle_CheckAnyPlayerAlive, this, &ACSGameMode::CheckAnyPlayerAlive, 0.9f, true);
+    return false;
 }
 
-void ACSGameMode::StartWave()
+void ACSGameMode::StartMatch()
 {
-    WaveCount++;
+    Super::StartMatch();
 
-    NumberOfBotsToSpawn = 2 * WaveCount;
-
-    GetWorldTimerManager().SetTimer(TimerHandle_BotSpawner, this, &ACSGameMode::SpawnBotTimerElapse, 2.0f, true, 0.0f);
-
-    SetWaveState(EWaveState::WaveInProgress);
+    UE_LOG(LogTemp, Warning, TEXT("Start Match"));
 }
 
-void ACSGameMode::EndWave()
+void ACSGameMode::EndMatch()
 {
-    GetWorldTimerManager().ClearTimer(TimerHandle_BotSpawner);
+    UE_LOG(LogTemp, Warning, TEXT("End Match"));
 
-    SetWaveState(EWaveState::WaitingToComplete);
+    GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
+
+    //GetWorld()->GetTimerManager().SetTimer(LoadLobbyHandle, this, &ADJVGameMode::LoadLobbyMap, TravelDelay, false);
+
+    Super::EndMatch();
 }
 
-void ACSGameMode::GameOver()
+void ACSGameMode::OnMatchStateSet()
 {
-    EndWave();
+    // Copy and override from GameMode.cpp
+    FGameModeEvents::OnGameModeMatchStateSetEvent().Broadcast(MatchState);
 
-    GetWorldTimerManager().ClearTimer(TimerHandle_CheckWaveState);
-    GetWorldTimerManager().ClearTimer(TimerHandle_CheckAnyPlayerAlive);
-
-    SetWaveState(EWaveState::GameOver);
+    // Call change callbacks
+    if (MatchState == MatchState::WaitingToStart)
+    {
+        HandleMatchIsWaitingToStart();
+    }
+    else if (MatchState == MatchState::InProgress)
+    {
+        HandleMatchHasStarted();
+    }
+    else if (MatchState == MatchState::WaitingPostMatch)
+    {
+        HandleMatchHasEnded();
+    }
+    else if (MatchState == MatchState::LeavingMap)
+    {
+        HandleLeavingMap();
+    }
+    else if (MatchState == MatchState::Aborted)
+    {
+        HandleMatchAborted();
+    }
+    else if (MatchState == MatchState::PreRound)
+    {
+        HandleRoundIsStarting();
+    }
+    else if (MatchState == MatchState::RoundInProgress)
+    {
+        HandleRoundHasStarted();
+    }
+    else if (MatchState == MatchState::PostRound)
+    {
+        HandleRoundHasEnded();
+    }
 }
 
-void ACSGameMode::PrepareForNextWave()
+void ACSGameMode::HandleMatchHasStarted()
 {
-    GetWorldTimerManager().SetTimer(TimerHandle_NextWaveStart, this, &ACSGameMode::StartWave, TimeBetweenWaves);
+    Super::HandleMatchHasStarted();
 
-    SetWaveState(EWaveState::WaitingToStart);
-
-    RespawnDeadPlayers();
+    UE_LOG(LogTemp, Warning, TEXT("Match has started"));
 }
 
-void ACSGameMode::CheckWaveState()
+bool ACSGameMode::ReadyToStartMatch_Implementation()
 {
-    bool bIsPreparingForNextWave = GetWorldTimerManager().IsTimerActive(TimerHandle_NextWaveStart);
+    // Copy from GameMode and override
+    // If bDelayed Start is set, wait for a manual match start
+    if (bDelayedStart)
+        return false;
 
-    if (NumberOfBotsToSpawn > 0 || bIsPreparingForNextWave)
+    int32 ControllerCount = 0;
+    int32 SpawnedCharCount = 0;
+
+    // By default start when we have > 0 players
+    if (GetMatchState() == MatchState::WaitingToStart)
+    {
+        // Check if all characters are spawned
+        for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+        {
+            APlayerController* PlayerActor = Iterator->Get();
+            if (PlayerActor) // TODO we need to disregard spectators, but currently players that havent spawned yet are considered spectators
+            {
+                ControllerCount++;
+
+                ACSCharacter* CSCharacter = Cast<ACSCharacter>(PlayerActor->GetCharacter());
+
+                if (CSCharacter)
+                {
+                    if (!CSCharacter->IsAlive())
+                        return false;
+
+                    SpawnedCharCount++;
+                }
+                else
+                    return false;
+            }
+        }
+
+        if (NumPlayers + NumBots > 0 && ControllerCount > 0 && ControllerCount == SpawnedCharCount)
+            return true;
+    }
+
+    return false;
+}
+
+bool ACSGameMode::ReadyToEndMatch_Implementation()
+{
+    return false;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Round System
+
+void ACSGameMode::StartPreRound()
+{
+    SetMatchState(MatchState::PreRound);
+
+    CSGameState->SetTimeRemaining(PreRoundDuration);
+
+    GetWorld()->GetTimerManager().SetTimer(TimerHandle_TickGameTime, this, &ACSGameMode::TickGameTime, 1.0f, true);
+}
+
+void ACSGameMode::StartRound()
+{
+    if (MatchState != MatchState::PreRound)
         return;
 
-    bool bIsAnyBotAlive = false;
+    SetMatchState(MatchState::RoundInProgress);
 
-    for (FConstPawnIterator Iterator = GetWorld()->GetPawnIterator(); Iterator; ++Iterator)
-    {
-        APawn* Pawn = Iterator->Get();
-        if(Pawn == nullptr || Pawn->IsPlayerControlled())
-            continue;
+    CSGameState->SetTimeRemaining(MaxRoundDuration);
 
-        UCSHealthComponent* HealthComp = Cast<UCSHealthComponent>(Pawn->GetComponentByClass(UCSHealthComponent::StaticClass()));
-
-        if(HealthComp == nullptr)
-            continue;
-
-        if (HealthComp->GetHealth() > 0.0f)
-        {
-            bIsAnyBotAlive = true;
-            break;
-        }
-    }
-
-    if (!bIsAnyBotAlive)
-    {
-        SetWaveState(EWaveState::WaveComplete);
-
-        PrepareForNextWave();
-    }
+    GetWorld()->GetTimerManager().SetTimer(TimerHandle_TickGameTime, this, &ACSGameMode::TickGameTime, 1.0f, true);
 }
 
-void ACSGameMode::CheckAnyPlayerAlive()
+void ACSGameMode::EndRound()
 {
-    for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
-    {
-        APlayerController* PC = It->Get();
+    SetMatchState(MatchState::PostRound);
 
-        if (PC == nullptr)
-            continue;
+    GetWorld()->GetTimerManager().ClearTimer(TimerHandle_TickGameTime);
 
-        APawn * PlayerPawn = PC->GetPawn();
+    CSGameState->SetTimeRemaining(PostRoundDuration);
 
-        if (PlayerPawn == nullptr)
-            continue;
-
-        UCSHealthComponent* HealthComp = 
-            Cast<UCSHealthComponent>(PlayerPawn->GetComponentByClass(UCSHealthComponent::StaticClass()));
-
-        if (ensure(HealthComp) && !HealthComp->IsDead())
-            return;
-    }
-
-    GameOver();
+    GetWorld()->GetTimerManager().SetTimer(TimerHandle_TickGameTime, this, &ACSGameMode::TickGameTime, 1.0f, true);
 }
 
-void ACSGameMode::SetWaveState(EWaveState NewState)
+void ACSGameMode::HandleRoundIsStarting()
 {
-    ACSGameState* GS = GetGameState<ACSGameState>();
+    if (CurrentRound)
+        RespawnDeadPlayers();
 
-    if (ensureAlways(GS))
-        GS->SetWaveState(NewState);
+    CurrentRound++;
+
+    CSGameState->SetCurrentRound(CurrentRound);
+}
+
+bool ACSGameMode::ReadyToStartRound_Implementation()
+{
+    return false;
+}
+
+bool ACSGameMode::ReadyToEndRound_Implementation()
+{
+    // Check either a team or player condition, but we don't have yet such a game mode
+    return false;
+}
+
+void ACSGameMode::HandleRoundHasEnded()
+{
+    // In case we have some complicated game mode logic for the end of the round
+    // this should happen here. Such as deciding which team/player won the round
+}
+
+bool ACSGameMode::ReadyToStartPreRound_Implementation()
+{
+    // We let the timer start new preround
+    return false;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Game Logic Handling
+
+void ACSGameMode::InitGameState()
+{
+    Super::InitGameState();
+
+    CSGameState = Cast<ACSGameState>(GameState);
+    if (CSGameState)
+    {
+        CSGameState->SetTimeRemaining(MaxRoundDuration);
+
+        CSGameState->SetMaxScore(MaxScore);
+
+        CSGameState->SetMaxRounds(RoundsToWin);
+    }
 }
 
 void ACSGameMode::RespawnDeadPlayers()
@@ -141,21 +258,65 @@ void ACSGameMode::RespawnDeadPlayers()
         if (PC == nullptr)
             continue;
 
-        APawn * PlayerPawn = PC->GetPawn();
+        APawn* PlayerPawn = PC->GetPawn();
 
         if (PlayerPawn == nullptr)
             RestartPlayer(PC);
     }
 }
 
-void ACSGameMode::SpawnBotTimerElapse()
+void ACSGameMode::Tick(float DeltaSeconds)
 {
-    SpawnNewBot();
+    AInfo::Tick(DeltaSeconds); // we call super from GameModeBase
 
-    NumberOfBotsToSpawn--;
+    // Override stuff from GameMode.cpp
+    if (GetMatchState() == MatchState::WaitingToStart)
+    {
+        // Check to see if we should start the match
+        if (ReadyToStartMatch())
+        {
+            UE_LOG(LogGameMode, Log, TEXT("GameMode returned ReadyToStartMatch"));
+            StartMatch();
+        }
+    }
 
-    if (NumberOfBotsToSpawn <= 0)
-        EndWave();
+    if (GetMatchState() == MatchState::InProgress)
+    {
+        //transition to preround
+        UE_LOG(LogGameMode, Log, TEXT("GameMode entered InProgress and is transitioning to PreRound"));
+        StartPreRound();
+    }
+
+    if (GetMatchState() == MatchState::PreRound)
+    {
+        // Check to see if we should start the round
+        if (ReadyToStartRound())
+        {
+            UE_LOG(LogGameMode, Log, TEXT("GameMode returned ReadyToStartRound"));
+            StartRound();
+        }
+    }
+
+    if (GetMatchState() == MatchState::RoundInProgress)
+    {
+        // Check to see if we should end the round
+        if (ReadyToEndRound())
+        {
+            UE_LOG(LogGameMode, Log, TEXT("GameMode returned ReadyToEndRound"));
+            EndRound();
+        }
+    }
+
+    if (GetMatchState() == MatchState::PostRound)
+    {
+        if (ReadyToEndMatch())
+        {
+            UE_LOG(LogGameMode, Log, TEXT("GameMode returned ReadyToEndMatch"));
+            EndMatch();
+        }
+        else if (ReadyToStartPreRound())
+            StartPreRound();
+    }
 }
 
 bool ACSGameMode::IsFriendlyFireAllowed()
@@ -172,4 +333,26 @@ void ACSGameMode::Killed(AController* Killer, AController* KilledPlayer, APawn* 
         KillerPlayerState->ScoreKill(ScorePerKill);
 
     OnActorKilled.Broadcast(KilledPawn, Killer->GetPawn(), Killer);
+}
+
+void ACSGameMode::TickGameTime()
+{
+    if (CSGameState)
+    {
+        float TimeRemaining = CSGameState->GetTimeRemaining() - 1;
+
+        CSGameState->SetTimeRemaining(TimeRemaining);
+
+        if (TimeRemaining <= 0)
+        {
+            GetWorld()->GetTimerManager().ClearTimer(TimerHandle_TickGameTime);
+
+            if (MatchState == MatchState::RoundInProgress)
+                EndRound();
+            else if (MatchState == MatchState::PreRound)
+                StartRound();
+            else if (MatchState == MatchState::PostRound)
+                StartPreRound();
+        }
+    }
 }

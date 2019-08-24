@@ -3,44 +3,82 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameStateBase.h"
+#include "GameFramework/GameState.h"
 #include "CSGameState.generated.h"
-
-UENUM(BlueprintType)
-enum class EWaveState : uint8
-{
-    WaitingToStart,
-
-    WaveInProgress,
-
-    WaitingToComplete,
-
-    WaveComplete,
-
-    GameOver,
-};
 
 /**
  * 
  */
 UCLASS()
-class UE4COOP_API ACSGameState : public AGameStateBase
+class UE4COOP_API ACSGameState : public AGameState
 {
     GENERATED_BODY()
 
 
-protected:
+public:
 
-    UFUNCTION(BlueprintImplementableEvent, Category = "GameState")
-    void WaveStateChanged(EWaveState NewState, EWaveState OldState);
+    //////////////////////////////////////////////////////////////////////////
+    // Writing Data
 
-    UFUNCTION()
-    void OnRep_WaveState(EWaveState OldState);
+    /** Set current timer remaining of the match state */
+    UFUNCTION(BlueprintCallable, Category = "Game")
+    void SetTimeRemaining(const float& Time);
 
-    UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_WaveState, Category = "GameState")
-    EWaveState WaveState;
+    /** Set the maximum amount of score the players/teams can get to */
+    UFUNCTION(BlueprintCallable, Category = "Rules")
+    void SetMaxScore(const int32& MaximumScore);
+
+    /** Set maximum allowed number of rounds for this game */
+    UFUNCTION(BlueprintCallable, Category = "Rules")
+    void SetMaxRounds(int32 MaxValue);
+
+    /** Set current round the gamemode is at */
+    UFUNCTION(BlueprintCallable, Category = "Game")
+    void SetCurrentRound(const int32& Round);
 
 public:
 
-    void SetWaveState(EWaveState NewState);
+    //////////////////////////////////////////////////////////////////////////
+    // Reading Data
+
+    /** Get Current Time Remaining of the match state */
+    UFUNCTION(BlueprintPure, Category = "Game")
+    float GetTimeRemaining() const;
+
+    /** Get maximum amount of score a team/player can reach to win the game */
+    UFUNCTION(BlueprintPure, Category = "Rules")
+    int32 GetMaxScore() const;
+
+    /** Get maximum number of rounds to play of the current game mode */
+    UFUNCTION(BlueprintPure, Category = "Rules")
+    int32 GetMaxRounds() const;
+
+    /** Get current round the gamemode is at */
+    UFUNCTION(BlueprintPure, Category = "Game")
+    int32 GetCurrentRound() const;
+
+    /** Whether the input for players is enabled or not */
+    UFUNCTION(BlueprintPure, Category = "Game")
+    bool IsInputEnabled() const;
+
+private:
+
+    //////////////////////////////////////////////////////////////////////////
+    // Replication
+
+    /** Maximum score a team/player can reach */
+    UPROPERTY(Transient, Replicated)
+    int32 MaxScore;
+
+    /** Maximum rounds to play */
+    UPROPERTY(Transient, Replicated)
+    int32 MaxRounds;
+
+    /** Current round the game mode is at */
+    UPROPERTY(Transient, Replicated)
+    int32 CurrentRound;
+
+    /** Time remaining of the current match state */
+    UPROPERTY(Transient, Replicated)
+    float TimeRemaining;
 };

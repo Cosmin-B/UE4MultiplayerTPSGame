@@ -60,6 +60,8 @@ void ACSCharacter::PostInitializeComponents()
     // Create material instance for setting team colors
     for (int32 iMat = 0; iMat < GetMesh()->GetNumMaterials(); iMat++)
         MeshMIDs.Add(GetMesh()->CreateAndSetMaterialInstanceDynamic(iMat));
+
+    UpdateTeamColorsAllMIDs();
 }
 
 // Called when the game starts or when spawned
@@ -82,7 +84,7 @@ void ACSCharacter::BeginPlay()
         GetWorldTimerManager().SetTimer(TimerHandle_SpawnDefaultWeapon, this, &ACSCharacter::SpawnDefaultWeapon, DelayToSpawnDefaultWeapon, false);
     }
 
-    // [server] after healthcomp teamnum is assigned, set team colors of this pawn
+    // [all] after healthcomp teamnum is assigned, set team colors of this pawn
     UpdateTeamColorsAllMIDs();
 }
 
@@ -404,6 +406,11 @@ void ACSCharacter::OnHealthChanged(UCSHealthComponent* HealthComponent, float He
 bool ACSCharacter::IsAiming() const
 {
     return bAiming;
+}
+
+bool ACSCharacter::IsAlive() const
+{
+    return !HealthComp->IsDead();
 }
 
 ACSWeapon* ACSCharacter::GetCurrentWeapon() const

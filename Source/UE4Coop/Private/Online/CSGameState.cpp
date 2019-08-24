@@ -2,28 +2,74 @@
 
 
 #include "CSGameState.h"
+#include "CSGameMode.h"
+
 #include "Net/UnrealNetwork.h"
 
-void ACSGameState::OnRep_WaveState(EWaveState OldState)
-{
-    WaveStateChanged(WaveState, OldState);
-}
+//////////////////////////////////////////////////////////////////////////
+// Writing Data
 
-void ACSGameState::SetWaveState(EWaveState NewState)
+void ACSGameState::SetTimeRemaining(const float& Time)
 {
     if (Role == ENetRole::ROLE_Authority)
-    {
-        EWaveState OldState = WaveState;
-
-        WaveState = NewState;
-
-        OnRep_WaveState(OldState);
-    }
+        TimeRemaining = Time;
 }
 
-void ACSGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void ACSGameState::SetMaxScore(const int32& MaximumScore)
+{
+    if (Role == ENetRole::ROLE_Authority)
+        MaxScore = MaximumScore;
+}
+
+void ACSGameState::SetMaxRounds(int32 MaxRoundsNum)
+{
+    if (Role == ENetRole::ROLE_Authority)
+        MaxRounds = MaxRoundsNum;
+}
+
+void ACSGameState::SetCurrentRound(const int32& Round)
+{
+    if (Role == ENetRole::ROLE_Authority)
+        CurrentRound = Round;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Reading Data
+
+float ACSGameState::GetTimeRemaining() const
+{
+    return TimeRemaining;
+}
+
+int32 ACSGameState::GetMaxScore() const
+{
+    return MaxScore;
+}
+
+int32 ACSGameState::GetMaxRounds() const
+{
+    return MaxRounds;
+}
+
+int32 ACSGameState::GetCurrentRound() const
+{
+    return CurrentRound;
+}
+
+bool ACSGameState::IsInputEnabled() const
+{
+    return GetMatchState() == MatchState::RoundInProgress || GetMatchState() == MatchState::PostRound || GetMatchState() == MatchState::WaitingPostMatch;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Replication
+
+void ACSGameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(ACSGameState, WaveState);
+    DOREPLIFETIME(ACSGameState, TimeRemaining);
+    DOREPLIFETIME(ACSGameState, MaxScore);
+    DOREPLIFETIME(ACSGameState, MaxRounds);
+    DOREPLIFETIME(ACSGameState, CurrentRound);
 }

@@ -260,6 +260,10 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Character")
     bool IsAiming() const;
 
+    /** Check if character is alive */
+    UFUNCTION(BlueprintCallable, Category = "Character")
+    bool IsAlive() const;
+
     /** Get Weapon Socket Name */
     FName GetWeaponAttachPoint() const;
 };
