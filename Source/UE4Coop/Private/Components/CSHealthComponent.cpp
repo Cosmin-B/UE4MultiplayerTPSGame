@@ -48,7 +48,7 @@ void UCSHealthComponent::OnDamageTaken(AActor* DamagedActor, float Damage, const
     if (!CSGameMode)
         return;
 
-    if (DamageCauser != DamageCauser && (IsFriendly(DamagedActor, DamageCauser) && !CSGameMode->IsFriendlyFireAllowed()))
+    if (DamagedActor != DamageCauser && (IsFriendly(DamagedActor, DamageCauser) && !CSGameMode->IsFriendlyFireAllowed()))
         return;
 
     const float OldHealth = Health;

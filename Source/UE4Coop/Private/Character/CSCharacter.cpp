@@ -387,8 +387,6 @@ void ACSCharacter::OnHealthChanged(UCSHealthComponent* HealthComponent, float He
     {
         bDied = true;
 
-        TearOff();
-
         DetachFromControllerPendingDestroy();
 
         GetMovementComponent()->StopMovementImmediately();
