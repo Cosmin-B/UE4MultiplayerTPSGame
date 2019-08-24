@@ -51,6 +51,8 @@ void ACSAIController::OnPossess(class APawn* InPawn)
 
         BehaviorComp->StartTree(*(MyAI->AIBehavior));
     }
+
+    Super::OnPossess(InPawn);
 }
 
 void ACSAIController::OnUnPossess()

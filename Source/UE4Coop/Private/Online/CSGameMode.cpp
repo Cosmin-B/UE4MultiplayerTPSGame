@@ -285,6 +285,11 @@ void ACSGameMode::Tick(float DeltaSeconds)
             UE_LOG(LogGameMode, Log, TEXT("GameMode returned ReadyToEndRound"));
             EndRound();
         }
+        else if(ReadyToEndMatch())
+        {
+            UE_LOG(LogGameMode, Log, TEXT("GameMode returned ReadyToEndMatch"));
+            EndMatch();
+        }
     }
 
     if (GetMatchState() == MatchState::PostRound)
