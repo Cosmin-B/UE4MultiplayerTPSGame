@@ -111,6 +111,9 @@ public:
     // Overriden for rounds functionality
     virtual void Tick(float DeltaSeconds) override;
 
+    UFUNCTION()
+    void LoadMainMenuMap();
+
 public:
 
     //////////////////////////////////////////////////////////////////////////
@@ -167,8 +170,8 @@ private:
     /** TimerHandle for efficient management of TickGameTime */
     FTimerHandle TimerHandle_TickGameTime;
 
-    /** TimerHandle for efficient management of LoadLobby */
-    FTimerHandle TimerHandle_LoadLobby;
+    /** TimerHandle for efficient management of LoadMainMenuMap */
+    FTimerHandle TimerHandle_LoadMenuHandle;
 
 protected:
 

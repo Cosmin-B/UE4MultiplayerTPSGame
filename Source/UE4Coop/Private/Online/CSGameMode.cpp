@@ -5,6 +5,7 @@
 #include "CSGameState.h"
 #include "CSCharacter.h"
 #include "CSPlayerState.h"
+#include "CSGameInstance.h"
 
 #include "GameFramework/PlayerState.h"
 #include "GameFramework/GameSession.h"
@@ -64,7 +65,8 @@ void ACSGameMode::EndMatch()
 
     GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
 
-    //GetWorld()->GetTimerManager().SetTimer(LoadLobbyHandle, this, &ADJVGameMode::LoadLobbyMap, TravelDelay, false);
+    GetWorld()->GetTimerManager().SetTimer(
+        TimerHandle_LoadMenuHandle, this, &ACSGameMode::LoadMainMenuMap, TravelDelay, false);
 
     Super::EndMatch();
 }
@@ -280,6 +282,14 @@ void ACSGameMode::Tick(float DeltaSeconds)
         else if (ReadyToStartPreRound())
             StartPreRound();
     }
+}
+
+void ACSGameMode::LoadMainMenuMap()
+{
+    UCSGameInstance* GI = GetWorld()->GetGameInstance<UCSGameInstance>();
+
+    if (GI)
+        GI->LoadMainMenu();
 }
 
 bool ACSGameMode::IsFriendlyFireAllowed()
