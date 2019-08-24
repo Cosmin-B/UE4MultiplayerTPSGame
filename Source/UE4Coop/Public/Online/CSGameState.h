@@ -6,6 +6,9 @@
 #include "GameFramework/GameState.h"
 #include "CSGameState.generated.h"
 
+/** Event for match state being changed */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FMatchStateChangedSignature, FName, PreviousMatchState, FName, NewMatchState);
+
 /**
  * 
  */
@@ -13,7 +16,6 @@ UCLASS()
 class UE4COOP_API ACSGameState : public AGameState
 {
     GENERATED_BODY()
-
 
 public:
 
@@ -61,10 +63,15 @@ public:
     UFUNCTION(BlueprintPure, Category = "Game")
     bool IsInputEnabled() const;
 
-private:
+protected:
 
     //////////////////////////////////////////////////////////////////////////
     // Replication
+
+    /** Broadcast matchstate change event */
+    virtual void OnRep_MatchState() override;
+
+private:
 
     /** Maximum score a team/player can reach */
     UPROPERTY(Transient, Replicated)
@@ -81,4 +88,10 @@ private:
     /** Time remaining of the current match state */
     UPROPERTY(Transient, Replicated)
     float TimeRemaining;
+
+public:
+
+    /** Event to be raised when Match State changes */
+    UPROPERTY(BlueprintAssignable, Category = "GameState")
+    FMatchStateChangedSignature OnMatchStateChanged;
 };

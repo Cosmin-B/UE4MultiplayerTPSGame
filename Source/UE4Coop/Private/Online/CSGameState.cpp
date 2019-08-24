@@ -64,6 +64,13 @@ bool ACSGameState::IsInputEnabled() const
 //////////////////////////////////////////////////////////////////////////
 // Replication
 
+void ACSGameState::OnRep_MatchState()
+{
+    Super::OnRep_MatchState();
+
+    OnMatchStateChanged.Broadcast(PreviousMatchState, MatchState);
+}
+
 void ACSGameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
