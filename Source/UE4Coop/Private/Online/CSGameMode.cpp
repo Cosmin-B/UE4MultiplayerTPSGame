@@ -320,7 +320,7 @@ void ACSGameMode::Killed(AController* Killer, AController* KilledPlayer, APawn* 
     if (KillerPlayerState && KillerPlayerState != VictimPlayerState)
         KillerPlayerState->ScoreKill(ScorePerKill);
 
-    OnActorKilled.Broadcast(KilledPawn, Killer->GetPawn(), Killer);
+    OnActorKilled.Broadcast(KilledPawn, Killer ? Killer->GetPawn() : nullptr, Killer);
 }
 
 void ACSGameMode::TickGameTime()
