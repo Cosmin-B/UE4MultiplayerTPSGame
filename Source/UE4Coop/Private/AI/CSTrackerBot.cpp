@@ -103,6 +103,9 @@ FVector ACSTrackerBot::GetNextPathPoint()
         if(!IsValid(PlayerActor))
             continue;
 
+        if(!Cast<ACSCharacter>(PlayerActor)->IsPlayerControlled())
+            continue;
+
         UCSHealthComponent* HealthComponent = Cast<UCSHealthComponent>(PlayerActor->GetComponentByClass(UCSHealthComponent::StaticClass()));
         if(HealthComponent == nullptr)
             continue;

@@ -118,44 +118,7 @@ void ACSGameMode::HandleMatchHasStarted()
 
 bool ACSGameMode::ReadyToStartMatch_Implementation()
 {
-    // Copy from GameMode and override
-    // If bDelayed Start is set, wait for a manual match start
-    if (bDelayedStart)
-        return false;
-
-    int32 ControllerCount = 0;
-    int32 SpawnedCharCount = 0;
-
-    // By default start when we have > 0 players
-    if (GetMatchState() == MatchState::WaitingToStart)
-    {
-        // Check if all characters are spawned
-        for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
-        {
-            APlayerController* PlayerActor = Iterator->Get();
-            if (PlayerActor) // TODO we need to disregard spectators, but currently players that havent spawned yet are considered spectators
-            {
-                ControllerCount++;
-
-                ACSCharacter* CSCharacter = Cast<ACSCharacter>(PlayerActor->GetCharacter());
-
-                if (CSCharacter)
-                {
-                    if (!CSCharacter->IsAlive())
-                        return false;
-
-                    SpawnedCharCount++;
-                }
-                else
-                    return false;
-            }
-        }
-
-        if (NumPlayers + NumBots > 0 && ControllerCount > 0 && ControllerCount == SpawnedCharCount)
-            return true;
-    }
-
-    return false;
+    return Super::ReadyToStartMatch_Implementation();
 }
 
 bool ACSGameMode::ReadyToEndMatch_Implementation()
