@@ -69,6 +69,8 @@ void ACSGameMode::EndMatch()
     GetWorld()->GetTimerManager().SetTimer(
         TimerHandle_LoadMenuHandle, this, &ACSGameMode::LoadMainMenuMap, TravelDelay, false);
 
+    CSGameState->SetPlayerWinner(bPlayerWinner);
+
     Super::EndMatch();
 }
 

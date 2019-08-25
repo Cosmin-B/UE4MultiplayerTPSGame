@@ -38,6 +38,10 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Game")
     void SetCurrentRound(const int32& Round);
 
+    /** Set who won the game match (TODO: Coco remove this) */
+    UFUNCTION(BlueprintCallable, Category = "Game")
+    void SetPlayerWinner(bool bPlayerWon);
+
 public:
 
     //////////////////////////////////////////////////////////////////////////
@@ -62,6 +66,10 @@ public:
     /** Whether the input for players is enabled or not */
     UFUNCTION(BlueprintPure, Category = "Game")
     bool IsInputEnabled() const;
+
+    /** Whether the winner of the game is the player (TODO: COCO remove this) */
+    UFUNCTION(BlueprintPure, Category = "Game")
+    bool IsPlayerWinner() const;
 
 protected:
 
@@ -88,6 +96,10 @@ private:
     /** Time remaining of the current match state */
     UPROPERTY(Transient, Replicated)
     float TimeRemaining;
+
+    /** Whether the players won the game or not */
+    UPROPERTY(Transient, Replicated)
+    bool bPlayerWinner;
 
 public:
 

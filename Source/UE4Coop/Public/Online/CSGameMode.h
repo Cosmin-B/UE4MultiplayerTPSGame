@@ -103,6 +103,11 @@ private:
     /** Current Round Number */
     int32 CurrentRound;
 
+protected:
+
+    /** Whether the player won this game match  (TODO: COCO remove this in the feature) */
+    bool bPlayerWinner;
+
 public:
 
     /** Respawn all players */

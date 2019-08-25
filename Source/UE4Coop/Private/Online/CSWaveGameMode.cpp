@@ -60,9 +60,15 @@ bool ACSWaveGameMode::ReadyToEndRound_Implementation()
 bool ACSWaveGameMode::ReadyToEndMatch_Implementation()
 {
     bool bReadyToEndMatch = GetMatchState() == MatchState::PostRound && GetCurrentRound() >= RoundsToWin;
+    
+    // TODO: COCO don't like this
+    bPlayerWinner = true;
 
     if (!bReadyToEndMatch)
     {
+        // TODO: COCO don't like this
+        bPlayerWinner = false;
+
         bReadyToEndMatch = true;
 
         for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)

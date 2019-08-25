@@ -33,6 +33,11 @@ void ACSGameState::SetCurrentRound(const int32& Round)
         CurrentRound = Round;
 }
 
+void ACSGameState::SetPlayerWinner(bool bPlayerWon)
+{
+    bPlayerWinner = bPlayerWon;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Reading Data
 
@@ -61,6 +66,11 @@ bool ACSGameState::IsInputEnabled() const
     return GetMatchState() == MatchState::RoundInProgress || GetMatchState() == MatchState::PostRound || GetMatchState() == MatchState::WaitingPostMatch;
 }
 
+bool ACSGameState::IsPlayerWinner() const
+{
+    return bPlayerWinner;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Replication
 
@@ -79,4 +89,5 @@ void ACSGameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLi
     DOREPLIFETIME(ACSGameState, MaxScore);
     DOREPLIFETIME(ACSGameState, MaxRounds);
     DOREPLIFETIME(ACSGameState, CurrentRound);
+    DOREPLIFETIME(ACSGameState, bPlayerWinner);
 }

@@ -13,6 +13,11 @@ void ACSPlayerState::Reset()
     Super::Reset();
 
     Score = 0;
+    NumberOfKills = 0;
+    NumberOfShotsFired = 0;
+    NumberOfShotsHit = 0;
+    DamageDone = 0;
+    DamageTaken = 0;
 }
 
 //////////////////////////////////////////////////////////////////////////
