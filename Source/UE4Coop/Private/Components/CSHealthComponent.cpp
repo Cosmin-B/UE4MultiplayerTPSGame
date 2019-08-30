@@ -2,7 +2,10 @@
 
 
 #include "CSHealthComponent.h"
-#include "../Public/CSGameMode.h"
+#include "CSGameMode.h"
+#include "CSCharacter.h"
+
+#include "GameFramework/DamageType.h"
 #include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
 
@@ -41,8 +44,14 @@ void UCSHealthComponent::OnDamageTaken(AActor* DamagedActor, float Damage, const
     if (Damage <= 0.0f || bIsDead)
         return;
 
-    if (DamageCauser != DamageCauser && IsFriendly(DamagedActor, DamageCauser))
+    ACSGameMode* CSGameMode = Cast<ACSGameMode>(GetWorld()->GetAuthGameMode());
+    if (!CSGameMode)
         return;
+
+    if (DamagedActor != DamageCauser && (IsFriendly(DamagedActor, DamageCauser) && !CSGameMode->IsFriendlyFireAllowed()))
+        return;
+
+    const float OldHealth = Health;
 
     Health = FMath::Clamp(Health - Damage, -1.0f, MaxHealth);
 
@@ -50,9 +59,22 @@ void UCSHealthComponent::OnDamageTaken(AActor* DamagedActor, float Damage, const
 
     bIsDead = Health <= 0.0f;
 
-    if (bIsDead)
-        if (ACSGameMode* GM = Cast<ACSGameMode>(GetWorld()->GetAuthGameMode()))
-            GM->OnActorKilled.Broadcast(GetOwner(), DamageCauser, InstigatedBy);
+    ACSCharacter* CSDamageCauser = Cast<ACSCharacter>(DamageCauser);
+    if(CSDamageCauser)
+        CSDamageCauser->RegisterAction(ECharacterAction::DamageDone, OldHealth - Health);
+
+    ACSCharacter* CSOwner = Cast<ACSCharacter>(GetOwner());
+    if (CSOwner)
+    {
+        // If owner is player send a client OnDamageTaken event broadcast
+        if (CSOwner->Controller && CSOwner->Controller->PlayerState)
+            ClientDamageTaken(Damage, InstigatedBy, DamageCauser);
+
+        CSOwner->RegisterAction(ECharacterAction::DamageTaken, Damage);
+
+        if (bIsDead)
+            CSGameMode->Killed(InstigatedBy, CSOwner->Controller, CSOwner, DamageType);
+    }
 }
 
 void UCSHealthComponent::ApplyHeal(float HealAmount)
@@ -79,11 +101,25 @@ bool UCSHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
     return HealthCompA->TeamNum == HealthCompB->TeamNum;
 }
 
+void UCSHealthComponent::ClientDamageTaken_Implementation(float Damage, class AController* InstigatedBy, AActor* DamageCauser)
+{
+    AActor* MyOwner = GetOwner();
+    if (MyOwner)
+        MyOwner->OnTakeAnyDamage.Broadcast(MyOwner, Damage, nullptr, InstigatedBy, DamageCauser);
+}
+
+bool UCSHealthComponent::ClientDamageTaken_Validate(float Damage, class AController* InstigatedBy, AActor* DamageCauser)
+{
+    return true;
+}
+
 void UCSHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+    DOREPLIFETIME(UCSHealthComponent, bIsDead);
     DOREPLIFETIME(UCSHealthComponent, Health);
+    DOREPLIFETIME(UCSHealthComponent, TeamNum);
 }
 
 void UCSHealthComponent::OnRep_Health(float OldHealth)
